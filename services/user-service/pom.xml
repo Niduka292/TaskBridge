@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.taskbridge</groupId>
-	<artifactId>backend</artifactId>
+	<artifactId>user-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
+	<name>user-service</name>
+	<description>User and auth service for TaskBridge</description>
 	<url/>
 	<licenses>
 		<license/>

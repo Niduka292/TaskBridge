@@ -1,14 +1,24 @@
+# Environment
+.env
+.env.local
+
 # Frontend
 frontend/node_modules/
 frontend/.next/
 frontend/.env*.local
 
-# Backend
-backend/target/
-backend/.mvn/
+# Services
+services/*/target/
+services/*/.mvn/
+services/*/node_modules/
 *.class
 
 # IDEs and OS
 .idea/
 .vscode/
 .DS_Store
+
+# Archives
+*.tgz
+
+/docs

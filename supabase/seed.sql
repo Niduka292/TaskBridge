@@ -1,0 +1,2 @@
+-- Local development seed data
+-- Run after migrations: psql $DATABASE_URL -f supabase/seed.sql

@@ -1,0 +1,40 @@
+services:
+
+  gateway:
+    build: ./gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      - user-service
+      - task-service
+      - payment-service
+      - notification-service
+
+  user-service:
+    build: ./services/user-service
+    ports:
+      - "8001:8001"
+    environment:
+      - SPRING_DATASOURCE_URL=${SUPABASE_DB_URL}
+      - SPRING_DATASOURCE_USERNAME=${SUPABASE_DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${SUPABASE_DB_PASSWORD}
+    env_file:
+      - .env
+
+  task-service:
+    image: alpine:3.19
+    command: sleep infinity
+    ports:
+      - "8002:8002"
+
+  payment-service:
+    image: alpine:3.19
+    command: sleep infinity
+    ports:
+      - "8003:8003"
+
+  notification-service:
+    image: alpine:3.19
+    command: sleep infinity
+    ports:
+      - "8004:8004"
