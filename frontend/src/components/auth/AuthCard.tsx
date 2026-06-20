@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { Card, CardContent, CardHeader } from '@/components/ui/button'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 
 interface AuthCardProps {
   title: string
