@@ -1,29 +1,34 @@
 import Link from 'next/link'
+import LightRays from '@/components/ui/LightRays'
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white flex flex-col">
 
       {/* ── Navbar ── */}
-      <header className="border-b border-zinc-800/60 px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+      <header className="fixed top-4 left-1/2 -translate-x-1/2 z-20 w-[calc(100%-2rem)] max-w-6xl">
+        <div
+          className="flex items-center justify-between px-6 py-3 rounded-2xl border border-white/10
+      bg-white/5 backdrop-blur-lg shadow-lg shadow-black/20
+      supports-[backdrop-filter]:bg-black/10"
+        >
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center">
               <span className="text-white font-bold text-xs">T</span>
             </div>
-            <span className="font-semibold text-base tracking-tight">TASKBRIDGE</span>
+            <span className="font-semibold text-base tracking-tight text-white">TASKBRIDGE</span>
           </div>
           <div className="flex items-center gap-3">
             <Link
               href="/auth/signin"
-              className="text-sm text-zinc-400 hover:text-white transition-colors px-3 py-1.5"
+              className="text-sm text-zinc-300 hover:text-white transition-colors px-3 py-1.5"
             >
               Sign in
             </Link>
             <Link
               href="/auth/signup"
-              className="text-sm bg-violet-600 hover:bg-violet-500 text-white px-4 py-2
-                rounded-lg font-medium transition-colors"
+              className="text-sm bg-violet-600/90 hover:bg-violet-500 text-white px-4 py-2
+          rounded-lg font-medium transition-colors backdrop-blur-sm"
             >
               Get started
             </Link>
@@ -35,15 +40,27 @@ export default function HomePage() {
       <main className="flex-1">
         <section className="relative overflow-hidden">
 
-          {/* Background glows */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px]
-              bg-violet-600/10 rounded-full blur-3xl" />
-            <div className="absolute top-32 left-1/3 w-[300px] h-[300px]
-              bg-indigo-600/8 rounded-full blur-3xl" />
+          {/* LightRays background */}
+          <div className="absolute inset-0 z-0" style={{ height: '100%' }}>
+            <LightRays
+              raysOrigin="top-center"
+              raysColor="#7c3aed"
+              raysSpeed={1}
+              lightSpread={1.2}
+              rayLength={3}
+              followMouse={true}
+              mouseInfluence={0.1}
+              noiseAmount={0}
+              distortion={0}
+              fadeDistance={1.8}
+              saturation={1}
+            />
           </div>
 
-          <div className="relative max-w-6xl mx-auto px-6 pt-24 pb-20 text-center">
+          {/* Overlay to keep text readable */}
+          <div className="absolute inset-0 z-[1] bg-zinc-950/60 pointer-events-none" />
+
+          <div className="relative z-[2] max-w-6xl mx-auto px-6 pt-24 pb-20 text-center">
 
             {/* Badge */}
             <div className="inline-flex items-center gap-2 bg-violet-600/10 border
@@ -82,27 +99,26 @@ export default function HomePage() {
               </Link>
               <Link
                 href="/tasks"
-                className="w-full sm:w-auto bg-zinc-800 hover:bg-zinc-700
+                className="w-full sm:w-auto bg-zinc-800/80 hover:bg-zinc-700
                   text-zinc-200 font-medium px-8 py-3 rounded-lg text-sm border
-                  border-zinc-700 transition-colors duration-150"
+                  border-zinc-700 backdrop-blur-sm transition-colors duration-150"
               >
                 Browse tasks
               </Link>
             </div>
 
-            {/* Social proof */}
             <p className="text-zinc-600 text-xs mt-8">
-              University email required · .ac.lk and .edu only
+              Open to all · University students get a verified badge
             </p>
           </div>
         </section>
 
         {/* ── Features ── */}
-        <section className="max-w-6xl mx-auto px-6 pb-24">
+        <section className="relative z-10 max-w-6xl mx-auto px-6 pb-24">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6
-              hover:border-zinc-700 transition-colors">
+            <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800
+              rounded-xl p-6 hover:border-zinc-700 transition-colors">
               <div className="w-10 h-10 rounded-lg bg-violet-600/15 border
                 border-violet-500/20 flex items-center justify-center mb-4">
                 <svg className="w-5 h-5 text-violet-400" fill="none"
@@ -126,8 +142,8 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6
-              hover:border-zinc-700 transition-colors">
+            <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800
+              rounded-xl p-6 hover:border-zinc-700 transition-colors">
               <div className="w-10 h-10 rounded-lg bg-emerald-600/15 border
                 border-emerald-500/20 flex items-center justify-center mb-4">
                 <svg className="w-5 h-5 text-emerald-400" fill="none"
@@ -146,8 +162,8 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6
-              hover:border-zinc-700 transition-colors">
+            <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800
+              rounded-xl p-6 hover:border-zinc-700 transition-colors">
               <div className="w-10 h-10 rounded-lg bg-amber-600/15 border
                 border-amber-500/20 flex items-center justify-center mb-4">
                 <svg className="w-5 h-5 text-amber-400" fill="none"
@@ -175,7 +191,7 @@ export default function HomePage() {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="border-t border-zinc-800/60 px-6 py-5">
+      <footer className="relative z-10 border-t border-zinc-800/60 px-6 py-5">
         <div className="max-w-6xl mx-auto flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded bg-violet-600 flex items-center justify-center">
