@@ -6,6 +6,7 @@ import { createTask, TaskCategory, ApiError } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { TagInput } from '@/components/ui/TagInput'
 
 // ── Constants ─────────────────────────────────
 const CATEGORIES: { value: TaskCategory; label: string }[] = [
@@ -19,11 +20,7 @@ const CATEGORIES: { value: TaskCategory; label: string }[] = [
   { value: TaskCategory.OTHER,              label: 'Other' },
 ]
 
-const POPULAR_TAGS = [
-  'React', 'Next.js', 'Node.js', 'Spring Boot', 'Python',
-  'PostgreSQL', 'MongoDB', 'Figma', 'Tailwind CSS', 'TypeScript',
-  'Java', 'Flutter', 'Machine Learning', 'Photoshop', 'WordPress',
-]
+// Skill suggestions now live as the default inside @/components/ui/TagInput
 
 // ── Step indicator ────────────────────────────
 function StepIndicator({ current, total }: { current: number; total: number }) {
@@ -89,97 +86,7 @@ function Field({
   )
 }
 
-// ── Tag input ─────────────────────────────────
-function TagInput({
-  tags,
-  onChange,
-  error,
-}: {
-  tags: string[]
-  onChange: (tags: string[]) => void
-  error?: string
-}) {
-  const [input, setInput] = useState('')
-
-  function addTag(value: string) {
-    const clean = value.trim().replace(/,/g, '')
-    if (!clean || tags.includes(clean) || tags.length >= 8) return
-    onChange([...tags, clean])
-    setInput('')
-  }
-
-  function removeTag(tag: string) {
-    onChange(tags.filter(t => t !== tag))
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault()
-      addTag(input)
-    }
-    if (e.key === 'Backspace' && !input && tags.length > 0) {
-      removeTag(tags[tags.length - 1])
-    }
-  }
-
-  return (
-    <div className="space-y-3">
-      {/* Tag pills display + input */}
-      <div className={`min-h-[42px] w-full rounded-lg px-3 py-2 bg-zinc-800
-        border transition-colors flex flex-wrap gap-2 items-center
-        focus-within:ring-2 focus-within:ring-offset-0
-        ${error
-          ? 'border-red-500 focus-within:ring-red-500'
-          : 'border-zinc-700 focus-within:ring-violet-500 focus-within:border-violet-500'
-        }`}>
-        {tags.map(tag => (
-          <span key={tag} className="inline-flex items-center gap-1.5 text-xs
-            px-2.5 py-1 rounded-full bg-violet-600/15 border border-violet-500/25
-            text-violet-300 font-medium">
-            {tag}
-            <button
-              type="button"
-              onClick={() => removeTag(tag)}
-              className="text-violet-400 hover:text-white transition-colors
-                leading-none w-3 h-3 flex items-center justify-center"
-            >
-              ×
-            </button>
-          </span>
-        ))}
-        <input
-          type="text"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onBlur={() => { if (input.trim()) addTag(input) }}
-          placeholder={tags.length === 0 ? 'Type a skill and press Enter...' : ''}
-          className="flex-1 min-w-[140px] bg-transparent text-sm text-white
-            placeholder:text-zinc-500 focus:outline-none"
-        />
-      </div>
-
-      {/* Popular tag suggestions */}
-      <div className="flex flex-wrap gap-1.5">
-        {POPULAR_TAGS.filter(t => !tags.includes(t)).slice(0, 10).map(tag => (
-          <button
-            key={tag}
-            type="button"
-            onClick={() => addTag(tag)}
-            disabled={tags.length >= 8}
-            className="text-xs px-2.5 py-1 rounded-full bg-zinc-800 border
-              border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500
-              transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            + {tag}
-          </button>
-        ))}
-      </div>
-
-      <p className="text-zinc-600 text-xs">{tags.length}/8 tags</p>
-    </div>
-  )
-}
+// ── Tag input now imported from @/components/ui/TagInput ──
 
 // ── Form state ────────────────────────────────
 interface FormData {
