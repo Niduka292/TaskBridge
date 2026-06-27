@@ -5,8 +5,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 import com.taskbridge.userservice.dto.ProfileResponse;
-import com.taskbridge.userservice.model.Profile;
-import com.taskbridge.userservice.repositories.ProfileRepository;
+import com.taskbridge.userservice.dto.UpdateProfileRequest;
 
 import lombok.RequiredArgsConstructor;
 
@@ -14,25 +13,15 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserService {
 
-    private final ProfileRepository profileRepository;
+    // Returns the caller's profile; balance is included only if callerId == userId
+    public ProfileResponse getProfile(UUID callerId, UUID userId) {
+        // TODO: implement in service layer step
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
 
-    public ProfileResponse getProfile(
-            UUID callerId,
-            UUID userId
-    ) {
-
-        Profile profile = profileRepository.findById(userId)
-                .orElseThrow();
-
-        boolean owner = callerId.equals(userId);
-
-        return ProfileResponse.builder()
-                .id(profile.getId())
-                .fullName(profile.getFullName())
-                .completedCount(profile.getCompletedTaskCount())
-                .avgRatingAsPoster(profile.getAvgRatingAsFreelancer())
-                .avgRatingAsFreelancer(profile.getAvgRatingAsFreelancer())
-                .balance(owner ? profile.getBalance() : null)
-                .build();
+    // Returns 403 if callerId != userId — enforced inside this method
+    public ProfileResponse updateProfile(UUID callerId, UUID userId, UpdateProfileRequest request) {
+        // TODO: implement in service layer step
+        throw new UnsupportedOperationException("Not implemented yet");
     }
 }
