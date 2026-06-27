@@ -88,17 +88,6 @@ export type EscrowStatus = 'PENDING' | 'HELD' | 'RELEASED' | 'REFUNDED'
 
 export type ReviewContext = 'AS_POSTER' | 'AS_FREELANCER'
 
-export type TaskCategory =
-  | 'WEB_DEVELOPMENT'
-  | 'MOBILE_DEVELOPMENT'
-  | 'UI_UX_DESIGN'
-  | 'GRAPHIC_DESIGN'
-  | 'DATA_ANALYSIS'
-  | 'CONTENT_WRITING'
-  | 'TUTORING'
-  | 'VIDEO_EDITING'
-  | 'OTHER'
-
 export type NotificationType =
   | 'BID_RECEIVED'
   | 'BID_ACCEPTED'
@@ -621,4 +610,17 @@ export function markNotificationRead(notificationId: string) {
   return apiFetch<void>(`/api/v1/notifications/${notificationId}/read`, {
     method: 'PUT',
   })
+}
+
+// src/lib/api.ts
+
+export enum TaskCategory {
+  WEB_DEVELOPMENT = 'WEB_DEVELOPMENT',
+  MOBILE_DEVELOPMENT = 'MOBILE_DEVELOPMENT',
+  UI_UX_DESIGN = 'UI_UX_DESIGN',
+  GRAPHIC_DESIGN = 'GRAPHIC_DESIGN',
+  CONTENT_WRITING = 'CONTENT_WRITING',
+  TUTORING = 'TUTORING',
+  VIDEO_EDITING = 'VIDEO_EDITING',
+  OTHER = 'OTHER'
 }
