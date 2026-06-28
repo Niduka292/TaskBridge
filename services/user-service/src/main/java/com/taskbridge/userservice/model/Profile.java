@@ -1,6 +1,7 @@
 package com.taskbridge.userservice.model;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -11,6 +12,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Getter
 @Setter
@@ -30,8 +33,9 @@ public class Profile {
 
     private String bio;
 
-    @Column(columnDefinition = "text[]")
-    private String[] skills;
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "skills",columnDefinition = "text[]")
+    private List<String> skills;
 
     @Column(name = "avg_rating_as_freelancer")
     private Double avgRatingAsFreelancer = 0.0;

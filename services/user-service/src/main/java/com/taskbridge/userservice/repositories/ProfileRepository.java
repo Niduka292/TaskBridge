@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import com.taskbridge.userservice.model.Profile;
 
 import jakarta.transaction.Transactional;
+import org.springframework.data.repository.query.Param;
 
 public interface ProfileRepository extends JpaRepository<Profile, UUID> {
     @Modifying
@@ -23,10 +24,6 @@ public interface ProfileRepository extends JpaRepository<Profile, UUID> {
 
     @Modifying
     @Transactional
-    @Query("""
-            UPDATE Profile p
-            SET p.completedCount = p.completedCount + 1
-            WHERE p.id = :id
-            """)
-    void incrementCompletedCount(UUID id);
+    @Query("UPDATE Profile p SET p.completedTaskCount = p.completedTaskCount + 1 WHERE p.id = :id")
+    void incrementCompletedCount(@Param("id") UUID id);
 }
