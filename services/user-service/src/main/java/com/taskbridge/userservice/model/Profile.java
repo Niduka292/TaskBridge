@@ -1,4 +1,5 @@
 package com.taskbridge.userservice.model;
+
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -22,8 +23,15 @@ import org.hibernate.type.SqlTypes;
 @Entity
 @Table(name = "profiles")
 public class Profile {
+
     @Id
-    private UUID id; // maps to auth.users(id), no @GeneratedValue
+    private UUID id;
+
+    @Column(unique = true, nullable = false)
+    private String email;
+
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
 
     @Column(name = "full_name")
     private String fullName;
@@ -34,8 +42,11 @@ public class Profile {
     private String bio;
 
     @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "skills",columnDefinition = "text[]")
+    @Column(name = "skills", columnDefinition = "text[]")
     private List<String> skills;
+
+    @Column(name = "avg_rating_as_poster")
+    private Double avgRatingAsPoster = 0.0;
 
     @Column(name = "avg_rating_as_freelancer")
     private Double avgRatingAsFreelancer = 0.0;
