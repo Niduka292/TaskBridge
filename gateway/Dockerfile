@@ -1,7 +1,5 @@
-FROM nginx:1.27-alpine
-
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
+FROM kong:3.6
+COPY kong.yml /etc/kong/kong.yml
+ENV KONG_DATABASE=off
+ENV KONG_DECLARATIVE_CONFIG=/etc/kong/kong.yml
 EXPOSE 8000
-
-CMD ["nginx", "-g", "daemon off;"]
