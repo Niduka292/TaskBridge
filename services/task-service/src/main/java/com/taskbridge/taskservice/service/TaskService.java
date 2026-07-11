@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.taskbridge.taskservice.dto.TaskRequest;
 import com.taskbridge.taskservice.dto.TaskResponse;
 import com.taskbridge.taskservice.model.Task;
+import com.taskbridge.taskservice.model.TaskCategory;
 import com.taskbridge.taskservice.model.TaskStatus;
 import com.taskbridge.taskservice.repository.TaskRepository;
 import com.taskbridge.taskservice.specification.TaskSpecification;
@@ -31,7 +32,7 @@ public class TaskService {
     // ---- LIST (with dynamic filters) ----
     public Page<TaskResponse> listTasks(
             TaskStatus status,
-            String category,
+            TaskCategory category,
             BigDecimal budgetMin,
             BigDecimal budgetMax,
             UUID posterId,
@@ -153,13 +154,14 @@ public class TaskService {
 
     // ---- RESOLVE DISPUTE (admin only — role check happens in controller/security layer) ----
     @Transactional
-    public TaskResponse resolveDispute(UUID taskId) {
+    public TaskResponse resolveDispute(UUID taskId, String escrowAction) {
         Task task = findTaskOrThrow(taskId);
 
         taskStateMachine.validateTransition(task.getStatus(), TaskStatus.COMPLETED);
         task.setStatus(TaskStatus.COMPLETED);
 
         return TaskResponse.fromEntity(task);
+        // eventPublisher.publish("DISPUTE_RESOLVED", new DisputeResolvedEvent(taskId, escrowAction)) — wired later
     }
 
     // ---- shared lookup helper ----

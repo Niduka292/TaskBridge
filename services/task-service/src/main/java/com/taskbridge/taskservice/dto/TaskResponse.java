@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import com.taskbridge.taskservice.model.Task;
 import com.taskbridge.taskservice.model.TaskStatus;
+import com.taskbridge.taskservice.model.TaskCategory;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,7 +26,7 @@ public class TaskResponse {
     private BigDecimal budgetLkr;
     private TaskStatus status;
     private Instant deadline;
-    private String category;
+    private TaskCategory category;
     private List<String> skillTags;
     private int bidCount;
     private String disputeReason;

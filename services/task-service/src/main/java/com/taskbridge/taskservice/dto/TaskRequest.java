@@ -1,7 +1,7 @@
 package com.taskbridge.taskservice.dto;
 
 import jakarta.validation.constraints.*;
-
+import com.taskbridge.taskservice.model.TaskCategory;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -11,7 +11,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-
 public class TaskRequest {
 
     @NotBlank
@@ -28,8 +27,8 @@ public class TaskRequest {
     @Future(message = "deadline must be in the future")
     private Instant deadline;
 
-    @NotBlank
-    private String category;
+    @NotNull
+    private TaskCategory category;
 
     private List<String> skillTags;
 

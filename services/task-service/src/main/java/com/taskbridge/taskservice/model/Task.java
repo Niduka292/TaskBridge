@@ -65,8 +65,9 @@ public class Task {
     @Column(nullable = false)
     private Instant deadline;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String category;
+    private TaskCategory category;
 
     @Column(name = "skill_tags", columnDefinition = "text[]")
     private String[] skillTags = new String[0];

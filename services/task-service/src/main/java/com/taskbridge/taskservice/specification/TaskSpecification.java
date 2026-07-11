@@ -1,14 +1,17 @@
 package com.taskbridge.taskservice.specification;
 
-import com.taskbridge.taskservice.model.Task;
-import com.taskbridge.taskservice.model.TaskStatus;
-import jakarta.persistence.criteria.Predicate;
-import org.springframework.data.jpa.domain.Specification;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import org.springframework.data.jpa.domain.Specification;
+
+import com.taskbridge.taskservice.model.Task;
+import com.taskbridge.taskservice.model.TaskCategory;
+import com.taskbridge.taskservice.model.TaskStatus;
+
+import jakarta.persistence.criteria.Predicate;
 
 public class TaskSpecification {
 
@@ -18,7 +21,7 @@ public class TaskSpecification {
 
     public static Specification<Task> withFilters(
             TaskStatus status,
-            String category,
+            TaskCategory category,
             BigDecimal budgetMin,
             BigDecimal budgetMax,
             UUID posterId,
@@ -32,7 +35,7 @@ public class TaskSpecification {
                 predicates.add(cb.equal(root.get("status"), status));
             }
 
-            if (category != null && !category.isBlank()) {
+            if (category != null) {
                 predicates.add(cb.equal(root.get("category"), category));
             }
 
