@@ -4,7 +4,9 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
+import io.hypersistence.utils.hibernate.type.array.StringArrayType;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.taskbridge.taskservice.converter.StringArrayConverter;
@@ -75,8 +77,8 @@ public class Task {
     //@Column(name = "skill_tags", columnDefinition = "text[]")
     //private String[] skillTags = new String[0];
 
-    @Column(name = "skill_tags", columnDefinition = "text[]")
     @Convert(converter = StringArrayConverter.class)
+    @Column(name = "skill_tags")
     private String[] skillTags = new String[0];
 
     @Column(name = "bid_count")

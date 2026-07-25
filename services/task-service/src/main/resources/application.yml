@@ -1,11 +1,11 @@
 server:
-  port: ${PORT:8082}
+  port: ${PORT:8002}
 
 spring:
   datasource:
-    url: ${DATABASE_URL}
-    username: ${SUPABASE_DB_USER}
-    password: ${SUPABASE_DB_PASSWORD}
+    url: ${POSTGRES_USER_DB_NAME}
+    username: ${POSTGRES_DB_USER}
+    password: ${POSTGRES_DB_PASS}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -22,4 +22,4 @@ spring:
 
 app:
   jwt:
-    secret: ${SUPABASE_JWT_SECRET}
+    secret: ${JWT_SECRET}
