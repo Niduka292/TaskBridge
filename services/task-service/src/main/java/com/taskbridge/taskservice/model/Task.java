@@ -7,7 +7,10 @@ import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.taskbridge.taskservice.converter.StringArrayConverter;
+
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -69,7 +72,11 @@ public class Task {
     @Column(nullable = false)
     private TaskCategory category;
 
+    //@Column(name = "skill_tags", columnDefinition = "text[]")
+    //private String[] skillTags = new String[0];
+
     @Column(name = "skill_tags", columnDefinition = "text[]")
+    @Convert(converter = StringArrayConverter.class)
     private String[] skillTags = new String[0];
 
     @Column(name = "bid_count")
