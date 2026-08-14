@@ -1,0 +1,25 @@
+{
+  "name": "notification-service",
+  "version": "1.0.0",
+  "description": "A pure event consumer. Listens to every domain event from all other services and writes a notification row to the database. No other service ever calls this service directly.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@sendgrid/mail": "^8.1.6",
+    "@supabase/supabase-js": "^2.108.2",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

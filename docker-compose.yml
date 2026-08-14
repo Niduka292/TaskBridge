@@ -68,10 +68,37 @@ services:
         condition: service_started
 
   payment-service:
-    image: alpine:3.19
-    command: sleep infinity
+    build: ./services/payment-service
     ports:
       - "8003:8003"
+    environment:
+      - DB_HOST=payment-postgres
+      - DB_PORT=5432
+      - DB_NAME=PaymentService
+      - DB_USER=postgres
+      - DB_PASSWORD=highway55
+      - JWT_SECRET=${JWT_SECRET}
+      - PAYHERE_MERCHANT_ID=${PAYHERE_MERCHANT_ID}
+      - PAYHERE_MERCHANT_SECRET=${PAYHERE_MERCHANT_SECRET}
+    env_file:
+      - .env
+    depends_on:
+      payment-postgres:
+        condition: service_healthy
+
+  payment-postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: PaymentService
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: highway55
+    volumes:
+      - payment-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   notification-service:
     image: alpine:3.19
@@ -80,4 +107,5 @@ services:
       - "8004:8004"
 
 volumes:
+  payment-pgdata:
   postgres_data:
