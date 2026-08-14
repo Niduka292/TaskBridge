@@ -2,58 +2,32 @@ _format_version: "3.0"
 
 services:
   - name: user-service
-    url: http://user-service:8001
+    url: http://user-service:8081
     routes:
-      - name: user-routes
-        paths:
-          - /auth
-          - /users
+      - paths: ["/api/v1/users"]
         strip_path: false
 
   - name: task-service
-    url: http://task-service:8002
+    url: http://task-service:8082
     routes:
-      - name: task-routes
-        paths:
-          - /tasks
-          - /bids
+      - paths: ["/api/v1/tasks", "/api/v1/bids"]
         strip_path: false
 
   - name: payment-service
-    url: http://payment-service:8003
+    url: http://payment-service:8083
     routes:
-      - name: payment-routes
-        paths:
-          - /payments
-          - /escrow
-          - /wallet
+      - paths: ["/api/v1/payments", "/api/v1/escrow"]
         strip_path: false
 
   - name: notification-service
-    url: http://notification-service:8004
+    url: http://notification-service:8084
     routes:
-      - name: notification-routes
-        paths:
-          - /notifications
+      - paths: ["/api/v1/notifications"]
         strip_path: false
 
 plugins:
-  - name: cors
-    config:
-      origins:
-        - http://localhost:3000
-      methods:
-        - GET
-        - POST
-        - PUT
-        - DELETE
-        - OPTIONS
-      headers:
-        - Authorization
-        - Content-Type
-      credentials: true
-
+  - name: jwt
   - name: rate-limiting
     config:
-      minute: 100
+      minute: 120
       policy: local

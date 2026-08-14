@@ -1,18 +1,24 @@
 package com.taskbridge.userservice.repositories;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.taskbridge.userservice.model.Profile;
 
 import jakarta.transaction.Transactional;
-import org.springframework.data.repository.query.Param;
 
 public interface ProfileRepository extends JpaRepository<Profile, UUID> {
+
+    Optional<Profile> findByEmail(String email);
+
+    boolean existsByEmail(String email);
+
     @Modifying
     @Transactional
     @Query("""
@@ -20,7 +26,7 @@ public interface ProfileRepository extends JpaRepository<Profile, UUID> {
             SET p.balance = p.balance + :amount
             WHERE p.id = :id
             """)
-    void incrementBalance(UUID id, BigDecimal amount);
+    void incrementBalance(@Param("id") UUID id, @Param("amount") BigDecimal amount);
 
     @Modifying
     @Transactional

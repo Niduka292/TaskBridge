@@ -17,6 +17,7 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
            AND r.revieweeId != :revieweeId
            """)
     Optional<Review> findCounterpart(UUID taskId, UUID revieweeId);
+    Page<Review> findByRevieweeIdAndRevealedTrue(UUID revieweeId, Pageable pageable);
 
     boolean existsByReviewerIdAndTaskId(UUID reviewerId, UUID taskId);
 

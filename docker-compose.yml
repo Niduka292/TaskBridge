@@ -1,5 +1,26 @@
 services:
 
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_DB_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_DB_PASS}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
   gateway:
     build: ./gateway
     ports:
@@ -15,17 +36,36 @@ services:
     ports:
       - "8001:8001"
     environment:
-      - SPRING_DATASOURCE_URL=${SUPABASE_DB_URL}
-      - SPRING_DATASOURCE_USERNAME=${SUPABASE_DB_USER}
-      - SPRING_DATASOURCE_PASSWORD=${SUPABASE_DB_PASSWORD}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/${POSTGRES_USER_DB_NAME}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_DB_PASS}
+      - JWT_SECRET=${JWT_SECRET}
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
     env_file:
       - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   task-service:
-    image: alpine:3.19
-    command: sleep infinity
+    build: ./services/task-service
     ports:
       - "8002:8002"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/${POSTGRES_TASK_DB_NAME}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_DB_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_DB_PASS}
+      - APP_JWT_SECRET=${JWT_SECRET}
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   payment-service:
     build: ./services/payment-service
@@ -68,3 +108,4 @@ services:
 
 volumes:
   payment-pgdata:
+  postgres_data:
