@@ -59,6 +59,8 @@ services:
       - SPRING_DATASOURCE_USERNAME=${POSTGRES_DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${POSTGRES_DB_PASS}
       - APP_JWT_SECRET=${JWT_SECRET}
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
     env_file:
       - .env
     depends_on:

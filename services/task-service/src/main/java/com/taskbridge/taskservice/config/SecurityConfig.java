@@ -35,14 +35,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtFilter jwtFilter) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/tasks/*/resolve").hasRole("ADMIN")
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/v1/tasks/*/resolve").hasRole("ADMIN")
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -63,7 +63,7 @@ public class SecurityConfig {
             String authHeader = request.getHeader("Authorization");
 
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                filterChain.doFilter(request, response);  // ← pass through, let Spring Security decide
+                filterChain.doFilter(request, response);
                 return;
             }
 
@@ -78,21 +78,32 @@ public class SecurityConfig {
                         .parseSignedClaims(token)
                         .getPayload();
 
-                // Extract user ID from 'sub'
-                UUID userId = UUID.fromString(claims.getSubject());
+                // Extract user ID from 'sub' — fail fast if missing or not a valid UUID
+                String subject = claims.getSubject();
+                if (subject == null) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    return;
+                }
+                UUID userId = UUID.fromString(subject);
 
-                // Extract name and avatar from user_metadata
-                Map<String, Object> userMetadata = (Map<String, Object>) claims.get("user_metadata");
-                String fullName   = userMetadata != null ? (String) userMetadata.get("full_name")  : null;
-                String avatarUrl  = userMetadata != null ? (String) userMetadata.get("avatar_url") : null;
+                // Safe extraction — don't crash if user_metadata is absent
+                // user-service may not include this claim
+                Map<String, Object> userMetadata = null;
+                Object rawMetadata = claims.get("user_metadata");
+                if (rawMetadata instanceof Map) {
+                    userMetadata = (Map<String, Object>) rawMetadata;
+                }
 
-                // Extract role — check for admin
-                String role = (String) claims.get("role");
+                String fullName  = userMetadata != null ? (String) userMetadata.get("full_name")  : null;
+                String avatarUrl = userMetadata != null ? (String) userMetadata.get("avatar_url") : null;
+
+                // Default to ROLE_USER if role claim is absent
+                Object rawRole = claims.get("role");
+                String role = rawRole instanceof String ? (String) rawRole : null;
                 List<SimpleGrantedAuthority> authorities = "admin".equalsIgnoreCase(role)
                         ? List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
                         : List.of(new SimpleGrantedAuthority("ROLE_USER"));
 
-                // Build principal that carries userId, fullName, avatarUrl
                 TaskBridgePrincipal principal = new TaskBridgePrincipal(userId, fullName, avatarUrl);
 
                 UsernamePasswordAuthenticationToken authentication =
@@ -121,8 +132,8 @@ public class SecurityConfig {
             this.avatarUrl = avatarUrl;
         }
 
-        public UUID getUserId()    { return userId;    }
-        public String getFullName() { return fullName; }
-        public String getAvatarUrl(){ return avatarUrl;}
+        public UUID getUserId()     { return userId;    }
+        public String getFullName() { return fullName;  }
+        public String getAvatarUrl(){ return avatarUrl; }
     }
 }
