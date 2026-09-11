@@ -2,31 +2,36 @@ _format_version: "3.0"
 
 services:
   - name: user-service
-    url: http://user-service:8081
+    url: http://user-service:8001
     routes:
-      - paths: ["/api/v1/users"]
+      - paths:
+          - /api/v1/users
         strip_path: false
 
   - name: task-service
-    url: http://task-service:8082
+    url: http://task-service:8002
     routes:
-      - paths: ["/api/v1/tasks", "/api/v1/bids"]
+      - paths:
+          - /api/v1/tasks
+          - /api/v1/bids
         strip_path: false
 
   - name: payment-service
-    url: http://payment-service:8083
+    url: http://payment-service:8003
     routes:
-      - paths: ["/api/v1/payments", "/api/v1/escrow"]
+      - paths:
+          - /api/v1/payments
+          - /api/v1/escrow
         strip_path: false
 
   - name: notification-service
-    url: http://notification-service:8084
+    url: http://notification-service:8004
     routes:
-      - paths: ["/api/v1/notifications"]
+      - paths:
+          - /api/v1/notifications
         strip_path: false
 
 plugins:
-  - name: jwt
   - name: rate-limiting
     config:
       minute: 120

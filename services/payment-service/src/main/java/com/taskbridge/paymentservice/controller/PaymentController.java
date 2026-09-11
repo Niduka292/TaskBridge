@@ -1,14 +1,16 @@
 package com.taskbridge.paymentservice.controller;
 
 import java.util.Map;
-
+import java.util.UUID;
+import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import com.taskbridge.paymentservice.dto.PaymentInitiateRequest;
 import com.taskbridge.paymentservice.dto.PaymentInitiateResponse;
 import com.taskbridge.paymentservice.model.EscrowTransaction;
@@ -67,5 +69,18 @@ public class PaymentController {
         // PayHere expects a 200 regardless of which status_code was received,
         // as long as the signature was valid — otherwise it will keep retrying.
         return ResponseEntity.ok("OK");
+    }
+
+    @PutMapping("/{escrowId}/release")
+    public ResponseEntity<EscrowTransaction> release(
+            @PathVariable UUID escrowId,
+            Authentication authentication) {
+
+        UUID requesterId = UUID.fromString(authentication.getName());
+
+        EscrowTransaction escrow =
+                escrowService.release(escrowId, requesterId);
+
+        return ResponseEntity.ok(escrow);
     }
 }
