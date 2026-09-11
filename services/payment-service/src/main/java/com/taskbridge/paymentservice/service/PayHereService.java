@@ -70,15 +70,29 @@ public class PayHereService {
      * the sandbox response before relying on this.
      */
     public boolean validateSignature(Map<String, String> params) {
+
         String merchantSecretHash = md5(merchantSecret).toUpperCase();
-        String raw = params.get("merchant_id")
-                + params.get("order_id")
-                + params.get("payhere_amount")
-                + params.get("payhere_currency")
-                + params.get("status_code")
-                + merchantSecretHash;
+
+        String raw =
+                params.get("merchant_id")
+                        + params.get("order_id")
+                        + params.get("payhere_amount")
+                        + params.get("payhere_currency")
+                        + params.get("status_code")
+                        + merchantSecretHash;
+
         String expected = md5(raw).toUpperCase();
-        return expected.equalsIgnoreCase(params.get("md5sig"));
+        String received = params.get("md5sig");
+
+        System.out.println("merchant_id: " + params.get("merchant_id"));
+        System.out.println("order_id: " + params.get("order_id"));
+        System.out.println("amount: " + params.get("payhere_amount"));
+        System.out.println("currency: " + params.get("payhere_currency"));
+        System.out.println("status: " + params.get("status_code"));
+        System.out.println("Expected MD5: " + expected);
+        System.out.println("Received MD5: " + received);
+
+        return expected.equalsIgnoreCase(received);
     }
 
     private String md5(String input) {

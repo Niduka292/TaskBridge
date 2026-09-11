@@ -2,6 +2,7 @@ package com.taskbridge.taskservice.service;
 
 import com.taskbridge.taskservice.dto.BidRequest;
 import com.taskbridge.taskservice.dto.BidResponse;
+import com.taskbridge.taskservice.event.BidAcceptedEvent;
 import com.taskbridge.taskservice.model.Bid;
 import com.taskbridge.taskservice.model.BidStatus;
 import com.taskbridge.taskservice.model.Task;
@@ -11,6 +12,8 @@ import com.taskbridge.taskservice.repository.TaskRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -21,10 +24,16 @@ public class BidService {
 
     private final BidRepository bidRepository;
     private final TaskRepository taskRepository;
+    private final EventPublisher eventPublisher;
 
-    public BidService(BidRepository bidRepository, TaskRepository taskRepository) {
+    public BidService(
+            BidRepository bidRepository,
+            TaskRepository taskRepository,
+            EventPublisher eventPublisher
+    ) {
         this.bidRepository = bidRepository;
         this.taskRepository = taskRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     // ---- LIST BIDS ON A TASK ----
@@ -84,36 +93,63 @@ public class BidService {
     @Transactional
     public BidResponse acceptBid(UUID bidId, UUID callerId) {
         Bid bid = bidRepository.findById(bidId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Bid not found: " + bidId));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Bid not found: " + bidId));
 
         Task task = bid.getTask();
 
         if (!task.getPosterId().equals(callerId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the task poster can accept bids");
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Only the task poster can accept bids");
         }
 
         if (task.getStatus() != TaskStatus.OPEN) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Task is not open — cannot accept a bid");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Task is not open — cannot accept a bid");
         }
 
         if (bid.getStatus() != BidStatus.PENDING) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Bid is not pending — cannot accept");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Bid is not pending — cannot accept");
         }
 
         // Step 1: accept the winning bid
         bid.setStatus(BidStatus.ACCEPTED);
 
-        // Step 2: bulk-reject all other bids on this task
-        bidRepository.bulkUpdateStatusExcept(task.getId(), bid.getId(), BidStatus.REJECTED);
+        // Step 2: reject all other bids
+        bidRepository.bulkUpdateStatusExcept(
+                task.getId(),
+                bid.getId(),
+                BidStatus.REJECTED
+        );
 
-        // Step 3: assign the task
+        // Step 3: assign the freelancer
         task.setAssignedTo(bid.getBidderId());
 
-        // NOTE: task status stays OPEN here — it only moves to IN_PROGRESS
-        // when payment-service publishes ESCROW_HELD back (handled in EventConsumer)
+        // Step 4: prepare BID_ACCEPTED event
+        BidAcceptedEvent event = new BidAcceptedEvent(
+                task.getId(),
+                bid.getId(),
+                task.getPosterId(),
+                bid.getBidderId(),
+                bid.getAmountLkr()
+        );
+
+        // Step 5: publish only after successful DB commit
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        eventPublisher.publish("BID_ACCEPTED", event);
+                    }
+                }
+        );
 
         return BidResponse.fromEntity(bid);
-        // EventPublisher.publish(BID_ACCEPTED) wired in later, AFTER commit
     }
 
     // ---- RETRACT A BID ----

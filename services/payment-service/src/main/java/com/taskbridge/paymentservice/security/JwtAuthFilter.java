@@ -36,9 +36,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         userId.toString(), null, Collections.emptyList());
                 SecurityContextHolder.getContext().setAuthentication(auth);
             } catch (Exception e) {
-                // Invalid/expired token — leave SecurityContext empty.
-                // The webhook route doesn't need auth, and everything else
-                // will get rejected downstream by .anyRequest().authenticated().
+                System.err.println("JWT validation failed: " + e.getMessage());
+                e.printStackTrace();
                 SecurityContextHolder.clearContext();
             }
         }

@@ -80,11 +80,17 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - PAYHERE_MERCHANT_ID=${PAYHERE_MERCHANT_ID}
       - PAYHERE_MERCHANT_SECRET=${PAYHERE_MERCHANT_SECRET}
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+
     env_file:
       - .env
+
     depends_on:
       payment-postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
 
   payment-postgres:
     image: postgres:16
