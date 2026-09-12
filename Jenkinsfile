@@ -12,7 +12,7 @@ pipeline {
         stage('Build User Service') {
             steps {
                 dir('services/user-service') {
-                    bat 'mvnw.cmd clean package -DskipTests'
+                    bat 'mvn clean package -DskipTests'
                 }
             }
         }
@@ -20,7 +20,7 @@ pipeline {
         stage('Build Task Service') {
             steps {
                 dir('services/task-service') {
-                    bat 'mvnw.cmd clean package -DskipTests'
+                    bat 'mvn clean package -DskipTests'
                 }
             }
         }
@@ -28,7 +28,7 @@ pipeline {
         stage('Build Payment Service') {
             steps {
                 dir('services/payment-service') {
-                    bat 'mvnw.cmd clean package -DskipTests'
+                    bat 'mvn clean package -DskipTests'
                 }
             }
         }
