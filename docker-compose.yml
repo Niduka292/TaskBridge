@@ -109,8 +109,6 @@ services:
   notification-service:
     image: alpine:3.19
     command: sleep infinity
-    ports:
-      - "8004:8004"
 
 volumes:
   payment-pgdata:

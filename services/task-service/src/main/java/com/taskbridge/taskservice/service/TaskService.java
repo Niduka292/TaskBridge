@@ -3,6 +3,8 @@ package com.taskbridge.taskservice.service;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import com.taskbridge.taskservice.client.UserServiceClient;
+import com.taskbridge.taskservice.client.UserPublicProfile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -23,10 +25,16 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final TaskStateMachine taskStateMachine;
+    private final UserServiceClient userServiceClient;
 
-    public TaskService(TaskRepository taskRepository, TaskStateMachine taskStateMachine) {
+    public TaskService(
+            TaskRepository taskRepository,
+            TaskStateMachine taskStateMachine,
+            UserServiceClient userServiceClient
+    ) {
         this.taskRepository = taskRepository;
         this.taskStateMachine = taskStateMachine;
+        this.userServiceClient = userServiceClient;
     }
 
     // ---- LIST (with dynamic filters) ----
@@ -55,22 +63,35 @@ public class TaskService {
 
     // ---- CREATE ----
     @Transactional
-    public TaskResponse createTask(TaskRequest request, UUID posterId, String posterName, String posterAvatar) {
+    public TaskResponse createTask(
+            TaskRequest request,
+            UUID posterId,
+            String posterName,
+            String posterAvatar
+    ) {
+        UserPublicProfile profile = userServiceClient.getUser(posterId);
+
         Task task = new Task();
         task.setPosterId(posterId);
-        task.setPosterName(posterName);
-        task.setPosterAvatar(posterAvatar);
+        task.setPosterName(profile.fullName());
+        task.setPosterAvatar(profile.avatarUrl());
+
         task.setTitle(request.getTitle());
         task.setDescription(request.getDescription());
         task.setBudgetLkr(request.getBudgetLkr());
         task.setDeadline(request.getDeadline());
         task.setCategory(request.getCategory());
-        task.setSkillTags(request.getSkillTags() != null
-                ? request.getSkillTags().toArray(new String[0])
-                : new String[0]);
-        task.setStatus(TaskStatus.OPEN); // always starts OPEN
+
+        task.setSkillTags(
+                request.getSkillTags() != null
+                        ? request.getSkillTags().toArray(new String[0])
+                        : new String[0]
+        );
+
+        task.setStatus(TaskStatus.OPEN);
 
         Task saved = taskRepository.save(task);
+
         return TaskResponse.fromEntity(saved);
     }
 

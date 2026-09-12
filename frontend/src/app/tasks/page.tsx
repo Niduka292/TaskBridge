@@ -108,19 +108,19 @@ function TaskCard({ task }: { task: Task }) {
           <div className="flex items-center gap-3">
             {/* Poster avatar */}
             <div className="flex items-center gap-1.5">
-              {task.poster?.avatarUrl ? (
-                <img src={task.poster?.avatarUrl} alt=""
+              {task.posterAvatar ? (
+                <img src={task.posterAvatar} alt=""
                   className="w-5 h-5 rounded-full object-cover" />
               ) : (
                 <div className="w-5 h-5 rounded-full bg-violet-600/20 flex
                   items-center justify-center">
                   <span className="text-violet-300 text-xs font-bold leading-none">
-                    {task.poster?.fullName?.[0] ?? '?'}
+                    {task.posterName?.[0] ?? '?'}
                   </span>
                 </div>
               )}
               <span className="text-xs text-zinc-500 truncate max-w-[100px]">
-                {task.poster?.fullName ?? 'Unknwon user'}
+                {task.posterName ?? 'Unknown user'}
               </span>
             </div>
             <span className="text-zinc-700 text-xs">·</span>

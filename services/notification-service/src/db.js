@@ -1,83 +1,124 @@
-// src/db.js
-import { createClient } from '@supabase/supabase-js'
-import dotenv from 'dotenv';
+import pg from 'pg'
 
-// Load environment variables
-dotenv.config();
+const { Pool } = pg
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY  // service role — bypasses RLS, safe server-side only
-)
+const pool = process.env.DATABASE_URL
+  ? new Pool({ connectionString: process.env.DATABASE_URL })
+  : new Pool({
+      host: process.env.DB_HOST ?? 'postgres',
+      port: Number(process.env.DB_PORT ?? 5432),
+      database: process.env.DB_NAME ?? 'TaskBridge',
+      user: process.env.DB_USER ?? process.env.POSTGRES_DB_USER ?? 'postgres',
+      password: process.env.DB_PASSWORD ?? process.env.POSTGRES_DB_PASS,
+    })
 
-/**
- * Insert a single notification row.
- * @param {{ userId: string, type: string, payload: object }} params
- */
-export async function insertNotification({ userId, type, payload }) {
-  const { error } = await supabase
-    .from('notifications')
-    .insert({ user_id: userId, type, payload })
+pool.on('error', (err) => {
+  console.error('[db] Unexpected PostgreSQL error:', err.message)
+})
 
-  if (error) throw new Error(`insertNotification failed [${type}]: ${error.message}`)
+export async function initDb() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL,
+      type VARCHAR(80) NOT NULL,
+      payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+      is_read BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `)
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_notifications_user_created
+    ON notifications (user_id, created_at DESC)
+  `)
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_notifications_user_unread
+    ON notifications (user_id, is_read)
+  `)
+
+  console.log('[db] notifications table ready')
 }
 
-/**
- * Get paginated notifications for a user, newest-first.
- * @param {{ userId: string, unreadOnly?: boolean, page?: number, limit?: number }}
- * @returns {{ data: object[], unreadCount: number }}
- */
+export async function insertNotification({ userId, type, payload }) {
+  if (!userId) {
+    console.warn(`[db] Skipping ${type}: missing userId`)
+    return
+  }
+
+  await pool.query(
+    `INSERT INTO notifications (user_id, type, payload)
+     VALUES ($1, $2, $3::jsonb)`,
+    [userId, type, JSON.stringify(payload ?? {})]
+  )
+}
+
 export async function getNotifications({ userId, unreadOnly = false, page = 1, limit = 20 }) {
   const offset = (page - 1) * limit
+  const filter = unreadOnly ? 'AND is_read = FALSE' : ''
 
-  // Build the data query
-  let query = supabase
-    .from('notifications')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1)
+  const [rowsResult, totalResult, unreadResult] = await Promise.all([
+    pool.query(
+      `SELECT id, user_id, type, payload, is_read, created_at
+       FROM notifications
+       WHERE user_id = $1 ${filter}
+       ORDER BY created_at DESC
+       LIMIT $2 OFFSET $3`,
+      [userId, limit, offset]
+    ),
+    pool.query(
+      `SELECT COUNT(*)::int AS count
+       FROM notifications
+       WHERE user_id = $1 ${filter}`,
+      [userId]
+    ),
+    pool.query(
+      `SELECT COUNT(*)::int AS count
+       FROM notifications
+       WHERE user_id = $1 AND is_read = FALSE`,
+      [userId]
+    ),
+  ])
 
-  if (unreadOnly) query = query.eq('is_read', false)
+  const content = rowsResult.rows.map((row) => ({
+    id: row.id,
+    userId: row.user_id,
+    type: row.type,
+    payload: row.payload,
+    isRead: row.is_read,
+    createdAt: row.created_at,
+  }))
 
-  // Separate count query — always counts ALL unread regardless of unreadOnly filter
-  const { count } = await supabase
-    .from('notifications')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .eq('is_read', false)
+  const totalElements = totalResult.rows[0]?.count ?? 0
+  const unreadCount = unreadResult.rows[0]?.count ?? 0
 
-  const { data, error } = await query
-  if (error) throw new Error(`getNotifications failed: ${error.message}`)
-
-  return { data, unreadCount: count ?? 0 }
+  return {
+    content,
+    page,
+    size: limit,
+    totalElements,
+    totalPages: Math.max(1, Math.ceil(totalElements / limit)),
+    unreadCount,
+  }
 }
 
-/**
- * Mark a single notification as read.
- * Validates ownership — a user can only mark their own notifications.
- * @param {{ userId: string, notificationId: string }}
- */
 export async function markOneRead({ userId, notificationId }) {
-  const { error } = await supabase
-    .from('notifications')
-    .update({ is_read: true })
-    .eq('id', notificationId)
-    .eq('user_id', userId)  // ownership check — never skip this
+  const result = await pool.query(
+    `UPDATE notifications
+     SET is_read = TRUE
+     WHERE id = $1 AND user_id = $2`,
+    [notificationId, userId]
+  )
 
-  if (error) throw new Error(`markOneRead failed: ${error.message}`)
+  return result.rowCount > 0
 }
 
-/**
- * Mark ALL notifications as read for a user.
- * @param {{ userId: string }}
- */
 export async function markAllRead({ userId }) {
-  const { error } = await supabase
-    .from('notifications')
-    .update({ is_read: true })
-    .eq('user_id', userId)
-    .eq('is_read', false)  // only touch unread rows — avoids unnecessary writes
-
-  if (error) throw new Error(`markAllRead failed: ${error.message}`)
+  await pool.query(
+    `UPDATE notifications
+     SET is_read = TRUE
+     WHERE user_id = $1 AND is_read = FALSE`,
+    [userId]
+  )
 }

@@ -605,22 +605,22 @@ export default function TaskDetailPage() {
               >
                 <div className="w-9 h-9 rounded-full bg-violet-600/20 border
                   border-violet-500/30 flex items-center justify-center flex-shrink-0">
-                  {task.poster?.avatarUrl ? (
+                  {task.posterAvatar ? (
                     <img
-                      src={task.poster.avatarUrl}
+                      src={task.posterAvatar}
                       alt=""
                       className="w-full h-full rounded-full object-cover"
                     />
                   ) : (
                     <span className="text-violet-300 text-sm font-bold">
-                      {task.poster?.fullName?.[0] ?? '?'}
+                      {task.posterName?.[0] ?? '?'}
                     </span>
                   )}
                 </div>
                 <div>
                   <p className="text-sm font-medium text-zinc-200
                     group-hover:text-white transition-colors">
-                    {task.poster?.fullName ?? 'Unknown user'}
+                    {task.posterName ?? 'Unknown user'}
                   </p>
                   {(task.poster?.avgRatingAsFreelancer ?? 0) > 0 && (
                     <p className="text-xs text-zinc-500">

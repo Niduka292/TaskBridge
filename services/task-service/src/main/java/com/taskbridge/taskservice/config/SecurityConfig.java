@@ -55,22 +55,25 @@ public class SecurityConfig {
         private String jwtSecret;
 
         @Override
-        protected void doFilterInternal(HttpServletRequest request,
-                                        HttpServletResponse response,
-                                        FilterChain filterChain)
-                throws ServletException, IOException {
+        protected void doFilterInternal(
+                HttpServletRequest request,
+                HttpServletResponse response,
+                FilterChain filterChain
+        ) throws ServletException, IOException {
 
             String authHeader = request.getHeader("Authorization");
 
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                filterChain.doFilter(request, response);  // ← pass through, let Spring Security decide
+                filterChain.doFilter(request, response);
                 return;
             }
 
             String token = authHeader.substring(7);
 
             try {
-                SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+                SecretKey key = Keys.hmacShaKeyFor(
+                        jwtSecret.getBytes(StandardCharsets.UTF_8)
+                );
 
                 Claims claims = Jwts.parser()
                         .verifyWith(key)
@@ -78,33 +81,46 @@ public class SecurityConfig {
                         .parseSignedClaims(token)
                         .getPayload();
 
-                // Extract user ID from 'sub'
                 UUID userId = UUID.fromString(claims.getSubject());
 
-                // Extract name and avatar from user_metadata
-                Map<String, Object> userMetadata = (Map<String, Object>) claims.get("user_metadata");
-                String fullName   = userMetadata != null ? (String) userMetadata.get("full_name")  : null;
-                String avatarUrl  = userMetadata != null ? (String) userMetadata.get("avatar_url") : null;
+                Map<String, Object> userMetadata =
+                        (Map<String, Object>) claims.get("user_metadata");
 
-                // Extract role — check for admin
+                String fullName = userMetadata != null
+                        ? (String) userMetadata.get("full_name")
+                        : null;
+
+                String avatarUrl = userMetadata != null
+                        ? (String) userMetadata.get("avatar_url")
+                        : null;
+
                 String role = (String) claims.get("role");
-                List<SimpleGrantedAuthority> authorities = "admin".equalsIgnoreCase(role)
-                        ? List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
-                        : List.of(new SimpleGrantedAuthority("ROLE_USER"));
 
-                // Build principal that carries userId, fullName, avatarUrl
-                TaskBridgePrincipal principal = new TaskBridgePrincipal(userId, fullName, avatarUrl);
+                List<SimpleGrantedAuthority> authorities =
+                        "admin".equalsIgnoreCase(role)
+                                ? List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                                : List.of(new SimpleGrantedAuthority("ROLE_USER"));
+
+                TaskBridgePrincipal principal =
+                        new TaskBridgePrincipal(userId, fullName, avatarUrl);
 
                 UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(principal, null, authorities);
+                        new UsernamePasswordAuthenticationToken(
+                                principal,
+                                null,
+                                authorities
+                        );
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                filterChain.doFilter(request, response);
+                SecurityContextHolder.getContext()
+                        .setAuthentication(authentication);
 
             } catch (Exception e) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
             }
+
+            // IMPORTANT: outside the try/catch
+            filterChain.doFilter(request, response);
         }
     }
 

@@ -2,6 +2,7 @@ package com.taskbridge.userservice.controllers;
 
 import java.util.UUID;
 
+import com.taskbridge.userservice.dto.PublicProfileResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,5 +42,10 @@ public class UserController {
     ) {
         UUID callerId = UUID.fromString(authentication.getName());
         return userService.updateProfile(callerId, userId, request);
+    }
+
+    @GetMapping("/{userId}/public")
+    public PublicProfileResponse getPublicProfile(@PathVariable UUID userId) {
+        return userService.getPublicProfile(userId);
     }
 }

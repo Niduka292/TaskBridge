@@ -1,17 +1,13 @@
-// src/env.js
 import dotenv from 'dotenv'
-import { fileURLToPath } from 'url'
-import { dirname, resolve } from 'path'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+dotenv.config()
 
-// src/ → notification-service/ → services/ → TaskBridge/ (monorepo root)
-const result = dotenv.config({ path: resolve(__dirname, '../../../.env') })
-
-if (result.error) {
-  console.error('[env] Failed to load .env:', result.error.message)
-} else {
-  console.log('[env] SUPABASE_URL:', process.env.SUPABASE_URL ? 'found' : 'MISSING')
-  console.log('[env] SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'found' : 'MISSING')
+const required = ['JWT_SECRET']
+for (const name of required) {
+  if (!process.env[name]) {
+    console.warn(`[env] ${name} is not set`)
+  }
 }
+
+console.log('[env] PostgreSQL:', process.env.DATABASE_URL ? 'DATABASE_URL' : `${process.env.DB_HOST ?? 'postgres'}:${process.env.DB_PORT ?? '5432'}`)
+console.log('[env] Redis:', process.env.REDIS_URL ?? 'redis://redis:6379')

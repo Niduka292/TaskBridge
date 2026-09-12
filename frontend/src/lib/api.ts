@@ -151,7 +151,8 @@ export interface Profile {
 export interface Task {
   id: string
   posterId: string
-  poster: UserSummary
+  posterName: string | null
+  posterAvatar: string | null
   assignedTo: string | null
   title: string
   description: string
@@ -167,11 +168,12 @@ export interface Task {
 }
 
 export interface Bid {
-  id: string
-  taskId: string
-  bidderId: string
-  bidder?: UserSummary           // only included when caller is the task poster
-  amountLkr: number
+  id: string;
+  taskId: string;
+  bidderId: string;
+  bidderName: string | null;
+  bidderAvatar: string | null;
+  amountLkr: number;
   proposal: string
   deliveryDays: number
   status: BidStatus

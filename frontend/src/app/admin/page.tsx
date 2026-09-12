@@ -141,7 +141,7 @@ function DisputeCard({
         <div className="flex-1 min-w-0">
           <p className="text-white font-medium text-sm">{task.title}</p>
           <p className="text-zinc-500 text-xs mt-1">
-            Posted by {task.poster.fullName} · LKR {task.budgetLKR.toLocaleString()}
+            Posted by {task.posterName} · LKR {task.budgetLKR.toLocaleString()}
           </p>
         </div>
         {!resolving && (

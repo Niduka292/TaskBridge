@@ -1,16 +1,5 @@
-// src/middleware/auth.js
 import jwt from 'jsonwebtoken'
 
-/**
- * Validates the Supabase JWT from the Authorization header.
- * Attaches the decoded payload to req.user on success.
- *
- * Supabase JWTs carry:
- *   sub       — the user's UUID (this is your userId throughout the service)
- *   email     — user's email
- *   role      — 'authenticated'
- *   exp       — expiry timestamp
- */
 export function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization
 
@@ -18,16 +7,21 @@ export function requireAuth(req, res, next) {
     return res.status(401).json({ error: 'Missing or malformed Authorization header' })
   }
 
-  const token = authHeader.split(' ')[1]
+  const token = authHeader.slice(7)
 
   try {
-    const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET, {
-      algorithms: ['HS256'],  // Supabase always signs with HS256 — be explicit
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+      algorithms: ['HS256'],
     })
 
+    if (!decoded.sub) {
+      return res.status(401).json({ error: 'Token does not contain a user id' })
+    }
+
     req.user = {
-      id: decoded.sub,        // use req.user.id everywhere — consistent with Supabase's auth.users.id
-      email: decoded.email,
+      id: decoded.sub,
+      email: decoded.email ?? null,
+      role: decoded.role ?? null,
     }
 
     next()

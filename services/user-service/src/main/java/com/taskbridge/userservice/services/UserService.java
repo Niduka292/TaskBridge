@@ -2,6 +2,7 @@ package com.taskbridge.userservice.services;
 
 import java.util.UUID;
 
+import com.taskbridge.userservice.dto.PublicProfileResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -64,5 +65,17 @@ public class UserService {
                 .completedCount(profile.getCompletedTaskCount())
                 .balance(profile.getBalance()) // owner is updating — balance visible
                 .build();
+    }
+
+    public PublicProfileResponse getPublicProfile(UUID userId) {
+        Profile profile = profileRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "User not found"));
+
+        return new PublicProfileResponse(
+                profile.getId(),
+                profile.getFullName(),
+                profile.getAvatarUrl()
+        );
     }
 }
