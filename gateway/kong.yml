@@ -4,40 +4,40 @@ services:
   - name: user-service
     url: http://user-service:8001
     routes:
-      - name: user-routes
-        paths:
-          - /auth
-          - /users
+      - paths:
+          - /api/v1/users
+          - /api/v1/auth
         strip_path: false
 
   - name: task-service
     url: http://task-service:8002
     routes:
-      - name: task-routes
-        paths:
-          - /tasks
-          - /bids
+      - paths:
+          - /api/v1/tasks
+          - /api/v1/bids
         strip_path: false
 
   - name: payment-service
     url: http://payment-service:8003
     routes:
-      - name: payment-routes
-        paths:
-          - /payments
-          - /escrow
-          - /wallet
+      - paths:
+          - /api/v1/payments
+          - /api/v1/escrow
         strip_path: false
 
   - name: notification-service
     url: http://notification-service:8004
     routes:
-      - name: notification-routes
-        paths:
-          - /notifications
+      - paths:
+          - /api/v1/notifications
         strip_path: false
 
 plugins:
+  - name: rate-limiting
+    config:
+      minute: 120
+      policy: local
+
   - name: cors
     config:
       origins:
@@ -47,13 +47,13 @@ plugins:
         - POST
         - PUT
         - DELETE
+        - PATCH
         - OPTIONS
       headers:
+        - Accept
         - Authorization
         - Content-Type
+      exposed_headers:
+        - Authorization
       credentials: true
-
-  - name: rate-limiting
-    config:
-      minute: 100
-      policy: local
+      max_age: 3600

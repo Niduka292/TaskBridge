@@ -1,0 +1,2 @@
+CREATE DATABASE "TaskBridge";
+CREATE DATABASE "TaskService";

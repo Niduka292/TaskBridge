@@ -1,4 +1,4 @@
-package com.taskbridge.backend;
+package com.taskbridge.userservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
