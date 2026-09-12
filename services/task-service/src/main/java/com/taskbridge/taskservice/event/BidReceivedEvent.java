@@ -7,6 +7,7 @@ public record BidReceivedEvent(
         UUID taskId,
         String taskTitle,
         UUID posterId,
+        UUID bidId,
         UUID bidderId,
         String bidderName,
         BigDecimal amountLkr

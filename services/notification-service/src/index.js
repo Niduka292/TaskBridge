@@ -1,6 +1,7 @@
 import './env.js'  
 import express from 'express'
 import notificationsRouter from './routes/notifications.js'
+import { mountConsumers } from './consumers/index.js'
 
 const app = express()
 
@@ -11,10 +12,6 @@ app.use('/api/v1/notifications', notificationsRouter)
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'notification-service' })
 })
-
-function mountConsumers() {
-  console.log('[consumers] skipped — event bus not connected yet')
-}
 
 mountConsumers()
 

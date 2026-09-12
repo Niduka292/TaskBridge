@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: payment-service
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:PaymentService}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+
+server:
+  port: 8003
+
+app:
+  jwt-secret: ${JWT_SECRET:changeme-local-dev-secret}
+  return-url: ${APP_RETURN_URL:https://taskmarket.vercel.app/payments/return}
+  cancel-url-base: ${APP_CANCEL_URL_BASE:https://taskmarket.vercel.app/tasks}
+  notify-url: ${APP_NOTIFY_URL:http://localhost:3000/api/v1/payments/webhook}
+
+payhere:
+  merchant-id: ${PAYHERE_MERCHANT_ID:1234567}
+  merchant-secret: ${PAYHERE_MERCHANT_SECRET:sandbox-secret-placeholder}
+  base-url: ${PAYHERE_BASE_URL:https://sandbox.payhere.lk/pay/checkout}
