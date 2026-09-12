@@ -7,21 +7,17 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import AuthCard from '@/components/auth/AuthCard'
-import { signUp } from '@/lib/supabase'
-
-// University email validation
-const isUniversityEmail = (email: string) =>
-  email.endsWith('.ac.lk') || email.endsWith('.edu')
+import { register } from '@/lib/auth'
 
 export default function SignUpPage() {
   const router = useRouter()
 
   const [fullName, setFullName] = useState('')
-  const [email, setEmail]       = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [confirm, setConfirm]   = useState('')
-  const [loading, setLoading]   = useState(false)
-  const [error, setError]       = useState<string | null>(null)
+  const [confirm, setConfirm] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Per-field errors
   const [fieldErrors, setFieldErrors] = useState<{
@@ -39,8 +35,6 @@ export default function SignUpPage() {
 
     if (!email)
       errors.email = 'Email is required'
-    else if (!isUniversityEmail(email))
-      errors.email = 'Must be a university email ending in .ac.lk or .edu'
 
     if (!password)
       errors.password = 'Password is required'
@@ -64,15 +58,14 @@ export default function SignUpPage() {
 
     setLoading(true)
     try {
-      const { error: supabaseError } = await signUp(email, password, fullName.trim())
-
-      if (supabaseError) {
-        setError(supabaseError.message)
-        return
-      }
+      await register(
+        email,
+        password,
+        fullName.trim()
+      )
 
       // Redirect to confirm page — user needs to check their email
-      router.push('/auth/confirm?email=' + encodeURIComponent(email))
+      router.push('/profile/dashboard')
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {

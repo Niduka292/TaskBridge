@@ -108,19 +108,19 @@ function TaskCard({ task }: { task: Task }) {
           <div className="flex items-center gap-3">
             {/* Poster avatar */}
             <div className="flex items-center gap-1.5">
-              {task.poster.avatarUrl ? (
-                <img src={task.poster.avatarUrl} alt=""
+              {task.poster?.avatarUrl ? (
+                <img src={task.poster?.avatarUrl} alt=""
                   className="w-5 h-5 rounded-full object-cover" />
               ) : (
                 <div className="w-5 h-5 rounded-full bg-violet-600/20 flex
                   items-center justify-center">
                   <span className="text-violet-300 text-xs font-bold leading-none">
-                    {task.poster.fullName[0]}
+                    {task.poster?.fullName?.[0] ?? '?'}
                   </span>
                 </div>
               )}
               <span className="text-xs text-zinc-500 truncate max-w-[100px]">
-                {task.poster.fullName}
+                {task.poster?.fullName ?? 'Unknwon user'}
               </span>
             </div>
             <span className="text-zinc-700 text-xs">·</span>
@@ -132,7 +132,7 @@ function TaskCard({ task }: { task: Task }) {
               {task.bidCount} bid{task.bidCount !== 1 ? 's' : ''}
             </span>
             <span className="text-sm font-bold text-white">
-              LKR {task.budgetLKR.toLocaleString()}
+              LKR {task.budgetLkr.toLocaleString()}
             </span>
           </div>
         </div>

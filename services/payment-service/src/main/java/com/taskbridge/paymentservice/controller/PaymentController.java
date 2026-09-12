@@ -17,6 +17,7 @@ import com.taskbridge.paymentservice.model.EscrowTransaction;
 import com.taskbridge.paymentservice.repository.EscrowRepository;
 import com.taskbridge.paymentservice.service.EscrowService;
 import com.taskbridge.paymentservice.service.PayHereService;
+import org.springframework.web.bind.annotation.GetMapping;
 
 @RestController
 @RequestMapping("/api/v1/payments")
@@ -69,6 +70,15 @@ public class PaymentController {
         // PayHere expects a 200 regardless of which status_code was received,
         // as long as the signature was valid — otherwise it will keep retrying.
         return ResponseEntity.ok("OK");
+    }
+
+    @GetMapping("/task/{taskId}")
+    public ResponseEntity<EscrowTransaction> getEscrowByTask(
+            @PathVariable UUID taskId) {
+
+        return escrowRepository.findByTaskId(taskId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{escrowId}/release")

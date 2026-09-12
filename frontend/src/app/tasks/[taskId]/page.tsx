@@ -10,13 +10,13 @@ import {
   acceptBid,
   retractBid,
   initiatePayment,
+  redirectToPayHere,
   buildPayHereCheckoutUrl,
   type Task,
   type Bid,
-  type Page,
   ApiError,
 } from '@/lib/api'
-import { getCurrentUserId, subscribeToBids } from '@/lib/supabase'
+import { getCurrentUserId } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -25,11 +25,11 @@ import { Label } from '@/components/ui/label'
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    OPEN:           'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    IN_PROGRESS:    'bg-blue-500/10    text-blue-400    border-blue-500/20',
+    OPEN: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    IN_PROGRESS: 'bg-blue-500/10    text-blue-400    border-blue-500/20',
     PENDING_REVIEW: 'bg-amber-500/10   text-amber-400   border-amber-500/20',
-    COMPLETED:      'bg-zinc-500/10    text-zinc-400    border-zinc-500/20',
-    DISPUTED:       'bg-red-500/10     text-red-400     border-red-500/20',
+    COMPLETED: 'bg-zinc-500/10    text-zinc-400    border-zinc-500/20',
+    DISPUTED: 'bg-red-500/10     text-red-400     border-red-500/20',
   }
   const labels: Record<string, string> = {
     OPEN: 'Open', IN_PROGRESS: 'In progress', PENDING_REVIEW: 'Pending review',
@@ -45,7 +45,7 @@ function StatusBadge({ status }: { status: string }) {
 
 function BidStatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    PENDING:  'text-zinc-400 bg-zinc-800 border-zinc-700',
+    PENDING: 'text-zinc-400 bg-zinc-800 border-zinc-700',
     ACCEPTED: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
     REJECTED: 'text-red-400 bg-red-500/10 border-red-500/20',
   }
@@ -113,12 +113,12 @@ function BidCard({
           <div className="w-8 h-8 rounded-full bg-violet-600/20 border
             border-violet-500/30 flex items-center justify-center flex-shrink-0">
             <span className="text-violet-300 text-xs font-bold">
-              {bid.bidder?.fullName?.[0] ?? '?'}
+              {bid.bidderName?.[0] ?? (isMyBid ? 'Y' : '?')}
             </span>
           </div>
           <div>
             <p className="text-sm font-medium text-zinc-200">
-              {bid.bidder?.fullName ?? (isMyBid ? 'You' : 'Anonymous')}
+              {bid.bidderName ?? (isMyBid ? 'You' : 'Anonymous')}
             </p>
             <p className="text-xs text-zinc-500">
               {bid.deliveryDays} day{bid.deliveryDays !== 1 ? 's' : ''} delivery
@@ -127,7 +127,7 @@ function BidCard({
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <span className="text-white font-bold text-sm">
-            LKR {bid.amountLKR.toLocaleString()}
+            LKR {bid.amountLkr.toLocaleString()}
           </span>
           <BidStatusBadge status={bid.status} />
         </div>
@@ -170,11 +170,11 @@ function BidForm({
   taskId: string
   onSuccess: () => void
 }) {
-  const [amount, setAmount]       = useState('')
-  const [proposal, setProposal]   = useState('')
-  const [days, setDays]           = useState('')
-  const [loading, setLoading]     = useState(false)
-  const [error, setError]         = useState<string | null>(null)
+  const [amount, setAmount] = useState('')
+  const [proposal, setProposal] = useState('')
+  const [days, setDays] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   function validate() {
@@ -196,22 +196,24 @@ function BidForm({
     setLoading(true)
     try {
       await createBid(taskId, {
-        amountLKR: Number(amount),
+        amountLkr: Number(amount),
         proposal: proposal.trim(),
         deliveryDays: Number(days),
       })
       setAmount(''); setProposal(''); setDays('')
       onSuccess()
     } catch (err) {
+      console.error('Bid submission error:', err)
+
       if (err instanceof ApiError) {
-        if (err.status === 403) setError('You cannot bid on your own task.')
-        else if (err.status === 409) setError('You have already placed a bid on this task.')
-        else setError('Failed to submit bid. Please try again.')
+        setError(
+          err.message
+            ? `Failed to submit bid: ${err.message}`
+            : `Failed to submit bid. Server returned ${err.status}.`
+        )
       } else {
         setError('Something went wrong.')
       }
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -317,60 +319,65 @@ export default function TaskDetailPage() {
   const router = useRouter()
   const taskId = params.taskId as string
 
-  const [task, setTask]             = useState<Task | null>(null)
-  const [bids, setBids]             = useState<Page<Bid> | null>(null)
+  const [task, setTask] = useState<Task | null>(null)
+  const [bids, setBids] = useState<Bid[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
-  const [loading, setLoading]       = useState(true)
-  const [error, setError]           = useState<string | null>(null)
-  const [accepting, setAccepting]   = useState<string | null>(null)
-  const [paying, setPaying]         = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [accepting, setAccepting] = useState<string | null>(null)
+  const [paying, setPaying] = useState(false)
   const [showBidForm, setShowBidForm] = useState(false)
 
-  const isOwner    = currentUserId === task?.posterId
+  const isOwner = currentUserId === task?.posterId
   const isAssigned = currentUserId === task?.assignedTo
-  const acceptedBid = bids?.content.find(b => b.status === 'ACCEPTED')
+  const acceptedBid = bids.find(
+    b => b.status === 'ACCEPTED'
+  )
 
   // Initial load
   useEffect(() => {
     async function load() {
       try {
-        const [t, uid] = await Promise.all([
-          getTask(taskId),
-          getCurrentUserId(),
-        ])
-        setTask(t)
+        const uid = getCurrentUserId()
         setCurrentUserId(uid)
-        const b = await getTaskBids(taskId, { size: 50 })
-        setBids(b)
-      } catch {
+
+        const [t, b] = await Promise.all([
+          getTask(taskId),
+          getTaskBids(taskId, { size: 50 }),
+        ])
+
+        setTask(t)
+        setBids(Array.isArray(b) ? b : b.content ?? [])
+      } catch (err) {
+        console.error('Failed to load task:', err)
         setError('Could not load task.')
       } finally {
         setLoading(false)
       }
     }
-    load()
-  }, [taskId])
 
-  // Realtime bid count subscription
-  useEffect(() => {
-    if (!taskId) return
-    const channel = subscribeToBids(taskId, () => {
-      setTask(prev => prev ? { ...prev, bidCount: prev.bidCount + 1 } : prev)
-      // Refresh bid list
-      getTaskBids(taskId, { size: 50 }).then(setBids).catch(() => {})
-    })
-    return () => { channel.unsubscribe() }
+    load()
   }, [taskId])
 
   async function handleAcceptBid(bidId: string) {
     setAccepting(bidId)
+
     try {
-      const updated = await acceptBid(bidId)
-      setTask(updated)
-      const b = await getTaskBids(taskId, { size: 50 })
-      setBids(b)
-    } catch {
-      // silently fail — show nothing
+      await acceptBid(bidId)
+
+      const [updatedTask, updatedBids] = await Promise.all([
+        getTask(taskId),
+        getTaskBids(taskId, { size: 50 }),
+      ])
+
+      setTask(updatedTask)
+      setBids(
+        Array.isArray(updatedBids)
+          ? updatedBids
+          : updatedBids.content ?? []
+      )
+    } catch (err) {
+      console.error('Failed to accept bid:', err)
     } finally {
       setAccepting(null)
     }
@@ -380,8 +387,8 @@ export default function TaskDetailPage() {
     try {
       await retractBid(bidId)
       const b = await getTaskBids(taskId, { size: 50 })
-      setBids(b)
-    } catch {}
+      setBids(Array.isArray(b) ? b : b.content ?? [])
+    } catch { }
   }
 
   async function handleProceedToPayment() {
@@ -389,8 +396,7 @@ export default function TaskDetailPage() {
     setPaying(true)
     try {
       const params = await initiatePayment(task.id)
-      const url = buildPayHereCheckoutUrl(params)
-      window.location.href = url
+      redirectToPayHere(params)
     } catch {
       setPaying(false)
     }
@@ -435,7 +441,7 @@ export default function TaskDetailPage() {
                   Tasks
                 </Link>
                 <span>/</span>
-                <span className="text-zinc-400">{task.category.replace(/_/g, ' ')}</span>
+                {task.category?.replace(/_/g, ' ') ?? 'Uncategorized'}
               </div>
 
               <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -456,9 +462,9 @@ export default function TaskDetailPage() {
               </p>
 
               {/* Skill tags */}
-              {task.skillTags.length > 0 && (
+              {(task.skillTags?.length ?? 0) > 0 && (
                 <div className="flex flex-wrap gap-2 mt-5 pt-5 border-t border-zinc-800">
-                  {task.skillTags.map(tag => (
+                  {(task.skillTags ?? []).map(tag => (
                     <SkillTag key={tag} label={tag} />
                   ))}
                 </div>
@@ -466,35 +472,30 @@ export default function TaskDetailPage() {
             </div>
 
             {/* Accepted bid — workspace CTA */}
-            {acceptedBid && task.status !== 'OPEN' && (
-              <div className="bg-emerald-500/5 border border-emerald-500/20
-                rounded-xl p-5 flex items-center justify-between gap-4 flex-wrap">
+            {acceptedBid && (
+              <div
+                className="bg-emerald-500/5 border border-emerald-500/20
+      rounded-xl p-5 flex items-center justify-between gap-4 flex-wrap"
+              >
                 <div>
                   <p className="text-emerald-400 text-sm font-medium mb-0.5">
                     Bid accepted
                   </p>
+
                   <p className="text-zinc-400 text-xs">
-                    {acceptedBid.bidder?.fullName ?? 'Freelancer'} ·{' '}
-                    LKR {acceptedBid.amountLKR.toLocaleString()} ·{' '}
+                    {acceptedBid.bidderName ?? 'Freelancer'} ·{' '}
+                    LKR {(acceptedBid.amountLkr ?? 0).toLocaleString()} ·{' '}
                     {acceptedBid.deliveryDays} days
                   </p>
                 </div>
 
-                {/* Poster: proceed to payment if escrow not yet initiated */}
-                {isOwner && task.status === 'OPEN' && (
-                  <Button loading={paying} onClick={handleProceedToPayment}>
+                {isOwner && (
+                  <Button
+                    loading={paying}
+                    onClick={handleProceedToPayment}
+                  >
                     Proceed to payment
                   </Button>
-                )}
-
-                {/* Go to workspace if work is underway */}
-                {(task.status === 'IN_PROGRESS' ||
-                  task.status === 'PENDING_REVIEW' ||
-                  task.status === 'DISPUTED') &&
-                  (isOwner || isAssigned) && (
-                  <Link href={`/tasks/${task.id}/workspace`}>
-                    <Button>Go to workspace</Button>
-                  </Link>
                 )}
               </div>
             )}
@@ -527,16 +528,18 @@ export default function TaskDetailPage() {
                     taskId={taskId}
                     onSuccess={() => {
                       setShowBidForm(false)
-                      getTaskBids(taskId, { size: 50 }).then(setBids).catch(() => {})
+                      getTaskBids(taskId, { size: 50 })
+                        .then(b => setBids(Array.isArray(b) ? b : b.content ?? []))
+                        .catch(() => { })
                     }}
                   />
                 </div>
               )}
 
               {/* Bid list */}
-              {bids && bids.content.length > 0 ? (
+              {bids.length > 0 ? (
                 <div className="space-y-3">
-                  {bids.content.map(bid => (
+                  {bids.map(bid => (
                     <BidCard
                       key={bid.id}
                       bid={bid}
@@ -571,7 +574,7 @@ export default function TaskDetailPage() {
               <div>
                 <p className="text-zinc-500 text-xs mb-1">Budget</p>
                 <p className="text-white text-2xl font-bold">
-                  LKR {task.budgetLKR.toLocaleString()}
+                  LKR {(task.budgetLkr ?? 0).toLocaleString()}
                 </p>
               </div>
               <div>
@@ -588,7 +591,7 @@ export default function TaskDetailPage() {
               <div>
                 <p className="text-zinc-500 text-xs mb-1">Category</p>
                 <p className="text-zinc-300 text-sm">
-                  {task.category.replace(/_/g, ' ')}
+                  {task.category?.replace(/_/g, ' ') ?? 'Uncategorized'}
                 </p>
               </div>
             </div>
@@ -602,23 +605,26 @@ export default function TaskDetailPage() {
               >
                 <div className="w-9 h-9 rounded-full bg-violet-600/20 border
                   border-violet-500/30 flex items-center justify-center flex-shrink-0">
-                  {task.poster.avatarUrl ? (
-                    <img src={task.poster.avatarUrl} alt=""
-                      className="w-full h-full rounded-full object-cover" />
+                  {task.poster?.avatarUrl ? (
+                    <img
+                      src={task.poster.avatarUrl}
+                      alt=""
+                      className="w-full h-full rounded-full object-cover"
+                    />
                   ) : (
                     <span className="text-violet-300 text-sm font-bold">
-                      {task.poster.fullName[0]}
+                      {task.poster?.fullName?.[0] ?? '?'}
                     </span>
                   )}
                 </div>
                 <div>
                   <p className="text-sm font-medium text-zinc-200
                     group-hover:text-white transition-colors">
-                    {task.poster.fullName}
+                    {task.poster?.fullName ?? 'Unknown user'}
                   </p>
-                  {task.poster.avgRatingAsFreelancer > 0 && (
+                  {(task.poster?.avgRatingAsFreelancer ?? 0) > 0 && (
                     <p className="text-xs text-zinc-500">
-                      ★ {task.poster.avgRatingAsFreelancer.toFixed(1)}
+                      ★ {task.poster?.avgRatingAsFreelancer?.toFixed(1)}
                     </p>
                   )}
                 </div>

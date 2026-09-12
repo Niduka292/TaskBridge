@@ -1,4 +1,4 @@
-import { getAccessToken } from '@/lib/supabase'
+import { getAccessToken } from '@/lib/auth';
 
 // ─────────────────────────────────────────────
 //  Base URL
@@ -6,6 +6,14 @@ import { getAccessToken } from '@/lib/supabase'
 //  Never call a service port directly.
 // ─────────────────────────────────────────────
 const BASE_URL = process.env.NEXT_PUBLIC_GATEWAY_URL
+
+// function getAccessToken(): string | null {
+//   if (typeof window === 'undefined') {
+//     return null
+//   }
+
+//   return localStorage.getItem('access_token')
+// }
 
 // ─────────────────────────────────────────────
 //  Error class
@@ -44,7 +52,8 @@ export async function apiFetch<T>(
   path: string,
   init?: RequestInit
 ): Promise<T> {
-  const token = await getAccessToken()
+
+  const token = getAccessToken()
 
   const res = await fetch(`${BASE_URL}${path}`, {
     ...init,
@@ -57,23 +66,31 @@ export async function apiFetch<T>(
 
   if (!res.ok) {
     let body: Record<string, unknown> = {}
+
     try {
       body = await res.json()
     } catch {
       // response body might not be JSON
     }
+
     throw new ApiError(res.status, body)
   }
 
-  // 204 No Content — return empty object
-  if (res.status === 204) return {} as T
+  if (res.status === 204) {
+    return {} as T
+  }
+  if (res.status === 401 || res.status === 403) {
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('user_id')
+    localStorage.removeItem('full_name')
+
+    window.location.href = '/auth/signin'
+
+    throw new Error('Session expired. Please sign in again.')
+  }
 
   return res.json()
 }
-
-// ─────────────────────────────────────────────
-//  Types
-// ─────────────────────────────────────────────
 
 export type TaskStatus =
   | 'OPEN'
@@ -154,7 +171,7 @@ export interface Bid {
   taskId: string
   bidderId: string
   bidder?: UserSummary           // only included when caller is the task poster
-  amountLKR: number
+  amountLkr: number
   proposal: string
   deliveryDays: number
   status: BidStatus
@@ -166,7 +183,7 @@ export interface EscrowTransaction {
   taskId: string
   payerId: string
   payeeId: string
-  amountLKR: number
+  amountLkr: number
   status: EscrowStatus
   gatewayRef: string | null
   createdAt: string
@@ -310,17 +327,17 @@ export interface TaskFilters {
  */
 export function listTasks(filters?: TaskFilters) {
   const query = new URLSearchParams()
-  if (filters?.status)     query.set('status', filters.status)
-  if (filters?.category)   query.set('category', filters.category)
+  if (filters?.status) query.set('status', filters.status)
+  if (filters?.category) query.set('category', filters.category)
   if (filters?.budgetMin !== undefined) query.set('budgetMin', String(filters.budgetMin))
   if (filters?.budgetMax !== undefined) query.set('budgetMax', String(filters.budgetMax))
   if (filters?.skillTags?.length) {
     filters.skillTags.forEach(tag => query.append('skillTags', tag))
   }
-  if (filters?.posterId)   query.set('posterId', filters.posterId)
+  if (filters?.posterId) query.set('posterId', filters.posterId)
   if (filters?.assignedTo) query.set('assignedTo', filters.assignedTo)
-  if (filters?.search)     query.set('search', filters.search)
-  if (filters?.sort)       query.set('sort', filters.sort)
+  if (filters?.search) query.set('search', filters.search)
+  if (filters?.sort) query.set('sort', filters.sort)
   if (filters?.page !== undefined) query.set('page', String(filters.page))
   if (filters?.size !== undefined) query.set('size', String(filters.size))
 
@@ -454,7 +471,7 @@ export function getTaskBids(
 export function createBid(
   taskId: string,
   data: {
-    amountLKR: number
+    amountLkr: number
     proposal: string
     deliveryDays: number
   }
@@ -493,7 +510,7 @@ export interface PaymentInitiateResponse {
   merchantId: string
   orderId: string
   items: string
-  amountLKR: number
+  amountLkr: number
   currency: string
   hash: string
   returnUrl: string
@@ -518,6 +535,47 @@ export function initiatePayment(taskId: string) {
   })
 }
 
+export function redirectToPayHere(params: PaymentInitiateResponse) {
+  const form = document.createElement('form')
+
+  form.method = 'POST'
+  form.action = 'https://sandbox.payhere.lk/pay/checkout'
+
+  const fields: Record<string, string> = {
+    merchant_id: params.merchantId,
+    return_url: params.returnUrl,
+    cancel_url: params.cancelUrl,
+    notify_url: params.notifyUrl,
+
+    order_id: params.orderId,
+    items: params.items,
+    currency: params.currency,
+    amount: Number(params.amountLkr).toFixed(2),
+    hash: params.hash,
+
+    first_name: 'Test',
+    last_name: 'User',
+    email: 'test@example.com',
+    phone: '0771234567',
+    address: 'No. 1, Main Road',
+    city: 'Colombo',
+    country: 'Sri Lanka',
+  }
+
+  Object.entries(fields).forEach(([name, value]) => {
+    const input = document.createElement('input')
+
+    input.type = 'hidden'
+    input.name = name
+    input.value = value
+
+    form.appendChild(input)
+  })
+
+  document.body.appendChild(form)
+  form.submit()
+}
+
 /**
  * Build the PayHere hosted checkout redirect URL
  * from the params returned by initiatePayment().
@@ -536,25 +594,17 @@ export function buildPayHereCheckoutUrl(
 
   const query = new URLSearchParams({
     merchant_id: params.merchantId,
-    return_url:  params.returnUrl,
-    cancel_url:  params.cancelUrl,
-    notify_url:  params.notifyUrl,
-    order_id:    params.orderId,
-    items:       params.items,
-    amount:      String(params.amountLKR),
-    currency:    params.currency,
-    hash:        params.hash,
+    return_url: params.returnUrl,
+    cancel_url: params.cancelUrl,
+    notify_url: params.notifyUrl,
+    order_id: params.orderId,
+    items: params.items,
+    amount: String(params.amountLkr),
+    currency: params.currency,
+    hash: params.hash,
   })
 
   return `${PAYHERE_BASE}?${query.toString()}`
-}
-
-/**
- * Get an escrow transaction by ID.
- * Only the payer (poster) or payee (freelancer) can retrieve it.
- */
-export function getEscrow(escrowId: string) {
-  return apiFetch<EscrowTransaction>(`/api/v1/escrow/${escrowId}`)
 }
 
 /**
@@ -563,9 +613,15 @@ export function getEscrow(escrowId: string) {
  * Triggers ESCROW_RELEASED event → task moves to COMPLETED.
  */
 export function releaseEscrow(escrowId: string) {
-  return apiFetch<EscrowTransaction>(`/api/v1/escrow/${escrowId}/release`, {
+  return apiFetch<EscrowTransaction>(`/api/v1/payments/${escrowId}/release`, {
     method: 'POST',
   })
+}
+
+export function getEscrow(taskId: string) {
+  return apiFetch<EscrowTransaction>(
+    `/api/v1/payments/task/${taskId}`
+  )
 }
 
 // ─────────────────────────────────────────────
@@ -584,9 +640,9 @@ export function getNotifications(params?: {
   unreadOnly?: boolean
 }) {
   const query = new URLSearchParams()
-  if (params?.page !== undefined)    query.set('page', String(params.page))
-  if (params?.size !== undefined)    query.set('size', String(params.size))
-  if (params?.unreadOnly)            query.set('unreadOnly', 'true')
+  if (params?.page !== undefined) query.set('page', String(params.page))
+  if (params?.size !== undefined) query.set('size', String(params.size))
+  if (params?.unreadOnly) query.set('unreadOnly', 'true')
 
   const qs = query.toString()
   return apiFetch<NotificationPage>(

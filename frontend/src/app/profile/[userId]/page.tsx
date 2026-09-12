@@ -112,13 +112,13 @@ export default function ProfilePage() {
   const router = useRouter()
   const userId = params.userId as string
 
-  const [profile, setProfile]       = useState<Profile | null>(null)
-  const [reviews, setReviews]       = useState<Page<Review> | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [reviews, setReviews] = useState<Page<Review> | null>(null)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
-  const [reviewTab, setReviewTab]   = useState<'AS_FREELANCER' | 'AS_POSTER'>('AS_FREELANCER')
-  const [loading, setLoading]       = useState(true)
-  const [error, setError]           = useState<string | null>(null)
-  const [uploading, setUploading]   = useState(false)
+  const [reviewTab, setReviewTab] = useState<'AS_FREELANCER' | 'AS_POSTER'>('AS_FREELANCER')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
 
   const isOwn = currentUserId === userId
 
@@ -146,7 +146,7 @@ export default function ProfilePage() {
     if (!userId) return
     getUserReviews(userId, { context: reviewTab, size: 10 })
       .then(setReviews)
-      .catch(() => {})
+      .catch(() => { })
   }, [userId, reviewTab])
 
   // Avatar upload
@@ -255,7 +255,7 @@ export default function ProfilePage() {
               </div>
 
               {/* Skills */}
-              {profile.skills.length > 0 && (
+              {profile.skills?.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-4">
                   {profile.skills.map(skill => (
                     <SkillTag key={skill} label={skill} />
@@ -302,11 +302,10 @@ export default function ProfilePage() {
               <button
                 key={tab}
                 onClick={() => setReviewTab(tab)}
-                className={`text-xs font-medium px-4 py-1.5 rounded-md transition-colors ${
-                  reviewTab === tab
+                className={`text-xs font-medium px-4 py-1.5 rounded-md transition-colors ${reviewTab === tab
                     ? 'bg-zinc-700 text-white'
                     : 'text-zinc-400 hover:text-zinc-200'
-                }`}
+                  }`}
               >
                 {tab === 'AS_FREELANCER' ? 'As freelancer' : 'As poster'}
               </button>

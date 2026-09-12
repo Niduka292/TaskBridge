@@ -130,7 +130,10 @@ public class BidService {
         // Step 3: assign the freelancer
         task.setAssignedTo(bid.getBidderId());
 
-        // Step 4: prepare BID_ACCEPTED event
+        // Step 4: move task into active work
+        task.setStatus(TaskStatus.IN_PROGRESS);
+
+        // Step 5: prepare BID_ACCEPTED event
         BidAcceptedEvent event = new BidAcceptedEvent(
                 task.getId(),
                 bid.getId(),
@@ -139,7 +142,7 @@ public class BidService {
                 bid.getAmountLkr()
         );
 
-        // Step 5: publish only after successful DB commit
+        // Step 6: publish only after successful DB commit
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
                     @Override

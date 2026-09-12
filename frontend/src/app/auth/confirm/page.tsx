@@ -76,9 +76,7 @@ export default function ConfirmPage() {
 
             <div className="rounded-md bg-zinc-800/60 border border-zinc-700 px-4 py-3">
               <p className="text-zinc-400 text-xs leading-relaxed">
-                Can&apos;t find the email? Check your spam folder. Make sure you
-                signed up with a <span className="text-zinc-200">.ac.lk</span> or{' '}
-                <span className="text-zinc-200">.edu</span> address.
+                Can&apos;t find the email? Check your spam folder.
               </p>
             </div>
 

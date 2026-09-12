@@ -435,7 +435,7 @@ export default function WorkspacePage() {
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
               <p className="text-zinc-500 text-xs mb-3">Escrow</p>
               <p className="text-white text-2xl font-bold mb-1">
-                LKR {escrow.amountLKR.toLocaleString()}
+                LKR {escrow.amountLkr.toLocaleString()}
               </p>
               <p className="text-zinc-500 text-xs">
                 {escrow.status === 'HELD'

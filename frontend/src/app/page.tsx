@@ -5,37 +5,6 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white flex flex-col">
 
-      {/* ── Navbar ── */}
-      <header className="fixed top-4 left-1/2 -translate-x-1/2 z-20 w-[calc(100%-2rem)] max-w-6xl">
-        <div
-          className="flex items-center justify-between px-6 py-3 rounded-2xl border border-white/10
-      bg-white/5 backdrop-blur-lg shadow-lg shadow-black/20
-      supports-[backdrop-filter]:bg-black/10"
-        >
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center">
-              <span className="text-white font-bold text-xs">T</span>
-            </div>
-            <span className="font-semibold text-base tracking-tight text-white">TASKBRIDGE</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/auth/signin"
-              className="text-sm text-zinc-300 hover:text-white transition-colors px-3 py-1.5"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/auth/signup"
-              className="text-sm bg-violet-600/90 hover:bg-violet-500 text-white px-4 py-2
-          rounded-lg font-medium transition-colors backdrop-blur-sm"
-            >
-              Get started
-            </Link>
-          </div>
-        </div>
-      </header>
-
       {/* ── Hero ── */}
       <main className="flex-1">
         <section className="relative overflow-hidden">
@@ -66,9 +35,7 @@ export default function HomePage() {
             <div className="inline-flex items-center gap-2 bg-violet-600/10 border
               border-violet-500/20 rounded-full px-4 py-1.5 mb-8">
               <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-              <span className="text-violet-300 text-xs font-medium tracking-wide">
-                Built for university students
-              </span>
+              
             </div>
 
             {/* Heading */}
@@ -84,8 +51,7 @@ export default function HomePage() {
 
             <p className="text-zinc-400 text-lg sm:text-xl max-w-xl mx-auto mb-10
               leading-relaxed font-light">
-              A peer-to-peer freelance marketplace built exclusively for university
-              students. Post work, bid on tasks, and get paid — all in LKR.
+              A peer-to-peer freelance marketplace. Post work, bid on tasks, and get paid — all in LKR.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -199,9 +165,6 @@ export default function HomePage() {
             </div>
             <span className="text-zinc-500 text-xs">TASKBRIDGE</span>
           </div>
-          <p className="text-zinc-600 text-xs">
-            Service Oriented Computing · University Project
-          </p>
         </div>
       </footer>
 

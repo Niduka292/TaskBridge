@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import AuthCard from '@/components/auth/AuthCard'
-import { signIn } from '@/lib/supabase'
+import { login } from '@/lib/auth'
 
 export default function SignInPage() {
   const router = useRouter()
@@ -28,21 +28,9 @@ export default function SignInPage() {
 
     setLoading(true)
     try {
-      const { error: supabaseError } = await signIn(email, password)
+      await login(email, password)
 
-      if (supabaseError) {
-        // Supabase returns generic errors — map them to user-friendly messages
-        if (supabaseError.message.toLowerCase().includes('invalid')) {
-          setError('Incorrect email or password. Please try again.')
-        } else if (supabaseError.message.toLowerCase().includes('confirm')) {
-          setError('Please confirm your email before signing in.')
-        } else {
-          setError(supabaseError.message)
-        }
-        return
-      }
-
-      router.push('/dashboard')
+      router.push('/profile/dashboard')
       router.refresh() // ensure middleware re-evaluates session
     } catch {
       setError('Something went wrong. Please try again.')

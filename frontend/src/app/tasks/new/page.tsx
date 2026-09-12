@@ -10,14 +10,14 @@ import { TagInput } from '@/components/ui/TagInput'
 
 // ── Constants ─────────────────────────────────
 const CATEGORIES: { value: TaskCategory; label: string }[] = [
-  { value: TaskCategory.WEB_DEVELOPMENT,    label: 'Web Development' },
+  { value: TaskCategory.WEB_DEVELOPMENT, label: 'Web Development' },
   { value: TaskCategory.MOBILE_DEVELOPMENT, label: 'Mobile Development' },
-  { value: TaskCategory.UI_UX_DESIGN,       label: 'UI / UX Design' },
-  { value: TaskCategory.GRAPHIC_DESIGN,     label: 'Graphic Design' },
-  { value: TaskCategory.CONTENT_WRITING,    label: 'Content Writing' },
-  { value: TaskCategory.TUTORING,           label: 'Tutoring' },
-  { value: TaskCategory.VIDEO_EDITING,      label: 'Video Editing' },
-  { value: TaskCategory.OTHER,              label: 'Other' },
+  { value: TaskCategory.UI_UX_DESIGN, label: 'UI / UX Design' },
+  { value: TaskCategory.GRAPHIC_DESIGN, label: 'Graphic Design' },
+  { value: TaskCategory.CONTENT_WRITING, label: 'Content Writing' },
+  { value: TaskCategory.TUTORING, label: 'Tutoring' },
+  { value: TaskCategory.VIDEO_EDITING, label: 'Video Editing' },
+  { value: TaskCategory.OTHER, label: 'Other' },
 ]
 
 // Skill suggestions now live as the default inside @/components/ui/TagInput
@@ -29,13 +29,12 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
       {Array.from({ length: total }).map((_, i) => (
         <div key={i} className="flex items-center gap-2">
           <div className={`w-7 h-7 rounded-full flex items-center justify-center
-            text-xs font-semibold transition-colors ${
-            i < current
+            text-xs font-semibold transition-colors ${i < current
               ? 'bg-violet-600 text-white'
               : i === current
-              ? 'bg-violet-600/20 border-2 border-violet-500 text-violet-400'
-              : 'bg-zinc-800 border border-zinc-700 text-zinc-600'
-          }`}>
+                ? 'bg-violet-600/20 border-2 border-violet-500 text-violet-400'
+                : 'bg-zinc-800 border border-zinc-700 text-zinc-600'
+            }`}>
             {i < current ? (
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">
@@ -47,9 +46,8 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
             )}
           </div>
           {i < total - 1 && (
-            <div className={`w-8 h-0.5 rounded transition-colors ${
-              i < current ? 'bg-violet-600' : 'bg-zinc-800'
-            }`} />
+            <div className={`w-8 h-0.5 rounded transition-colors ${i < current ? 'bg-violet-600' : 'bg-zinc-800'
+              }`} />
           )}
         </div>
       ))}
@@ -94,7 +92,7 @@ interface FormData {
   description: string
   category: TaskCategory | ''
   skillTags: string[]
-  budgetLKR: string
+  budgetLkr: string
   deadline: string
 }
 
@@ -103,7 +101,7 @@ interface FieldErrors {
   description?: string
   category?: string
   skillTags?: string
-  budgetLKR?: string
+  budgetLkr?: string
   deadline?: string
 }
 
@@ -120,7 +118,7 @@ export default function PostTaskPage() {
     description: '',
     category: '',
     skillTags: [],
-    budgetLKR: '',
+    budgetLkr: '',
     deadline: '',
   })
 
@@ -153,8 +151,8 @@ export default function PostTaskPage() {
 
   function validateStep1(): boolean {
     const e: FieldErrors = {}
-    if (!form.budgetLKR || Number(form.budgetLKR) < 100)
-      e.budgetLKR = 'Minimum budget is LKR 100'
+    if (!form.budgetLkr || Number(form.budgetLkr) < 100)
+      e.budgetLkr = 'Minimum budget is LKR 100'
     if (!form.deadline)
       e.deadline = 'Please set a deadline'
     else if (new Date(form.deadline) <= new Date())
@@ -177,12 +175,12 @@ export default function PostTaskPage() {
     setLoading(true)
     try {
       const task = await createTask({
-        title:       form.title.trim(),
+        title: form.title.trim(),
         description: form.description.trim(),
-        category:    form.category as TaskCategory,
-        skillTags:   form.skillTags,
-        budgetLKR:   Number(form.budgetLKR),
-        deadline:    new Date(form.deadline).toISOString(),
+        category: form.category as TaskCategory,
+        skillTags: form.skillTags,
+        budgetLkr: Number(form.budgetLkr),
+        deadline: new Date(form.deadline).toISOString(),
       })
       router.push(`/tasks/${task.id}`)
     } catch (err) {
@@ -238,9 +236,8 @@ export default function PostTaskPage() {
                   maxLength={120}
                 />
                 <div className="flex justify-end mt-1">
-                  <span className={`text-xs ${
-                    form.title.length > 100 ? 'text-amber-400' : 'text-zinc-600'
-                  }`}>
+                  <span className={`text-xs ${form.title.length > 100 ? 'text-amber-400' : 'text-zinc-600'
+                    }`}>
                     {form.title.length}/120
                   </span>
                 </div>
@@ -294,11 +291,10 @@ export default function PostTaskPage() {
                     ? <p className="text-red-400 text-xs">{errors.description}</p>
                     : <span />
                   }
-                  <span className={`text-xs ${
-                    form.description.length < 20 && form.description.length > 0
+                  <span className={`text-xs ${form.description.length < 20 && form.description.length > 0
                       ? 'text-amber-400'
                       : 'text-zinc-600'
-                  }`}>
+                    }`}>
                     {form.description.length} chars
                   </span>
                 </div>
@@ -326,7 +322,7 @@ export default function PostTaskPage() {
                 <Field
                   label="Budget (LKR)"
                   hint="Minimum LKR 100"
-                  error={errors.budgetLKR}
+                  error={errors.budgetLkr}
                   required
                 >
                   <div className="relative">
@@ -338,9 +334,9 @@ export default function PostTaskPage() {
                       type="number"
                       placeholder="5000"
                       min={100}
-                      value={form.budgetLKR}
-                      onChange={e => update('budgetLKR', e.target.value)}
-                      error={!!errors.budgetLKR}
+                      value={form.budgetLkr}
+                      onChange={e => update('budgetLkr', e.target.value)}
+                      error={!!errors.budgetLkr}
                       className="pl-12"
                     />
                   </div>
@@ -378,7 +374,7 @@ export default function PostTaskPage() {
                       type="button"
                       onClick={() => {
                         const val = b.range.split('–')[0].replace(/[^0-9]/g, '')
-                        update('budgetLKR', val)
+                        update('budgetLkr', val)
                       }}
                       className="text-left p-2.5 rounded-lg bg-zinc-800 border
                         border-zinc-700 hover:border-violet-500/40
@@ -440,7 +436,7 @@ export default function PostTaskPage() {
                   <div className="p-4 bg-zinc-800/50 rounded-lg border border-zinc-700/50">
                     <p className="text-xs text-zinc-500 mb-1">Budget</p>
                     <p className="text-white text-lg font-bold">
-                      LKR {Number(form.budgetLKR).toLocaleString()}
+                      LKR {Number(form.budgetLkr).toLocaleString()}
                     </p>
                   </div>
                   <div className="p-4 bg-zinc-800/50 rounded-lg border border-zinc-700/50">
