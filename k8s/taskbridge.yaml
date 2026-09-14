@@ -135,8 +135,10 @@ spec:
                 - sh
                 - -c
                 - pg_isready -U "$POSTGRES_USER"
-            initialDelaySeconds: 5
+            initialDelaySeconds: 10
             periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 6
 
           livenessProbe:
             exec:
@@ -144,8 +146,10 @@ spec:
                 - sh
                 - -c
                 - pg_isready -U "$POSTGRES_USER"
-            initialDelaySeconds: 15
+            initialDelaySeconds: 20
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
 
       volumes:
         - name: postgres-storage
@@ -300,18 +304,33 @@ spec:
                   name: taskbridge-secret
                   key: PAYMENT_DB_PASSWORD
 
-          volumeMounts:
-            - name: payment-postgres-storage
-              mountPath: /var/lib/postgresql/data
-
           readinessProbe:
+              exec:
+                command:
+                  - pg_isready
+                  - -U
+                  - postgres
+              initialDelaySeconds: 10
+              periodSeconds: 5
+              timeoutSeconds: 5
+              failureThreshold: 6
+
+          livenessProbe:
             exec:
               command:
                 - pg_isready
                 - -U
                 - postgres
-            initialDelaySeconds: 5
-            periodSeconds: 5
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+
+          volumeMounts:
+            - name: payment-postgres-storage
+              mountPath: /var/lib/postgresql/data
+
+          
 
       volumes:
         - name: payment-postgres-storage

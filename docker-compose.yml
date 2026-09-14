@@ -107,8 +107,28 @@ services:
       retries: 5
 
   notification-service:
-    image: alpine:3.19
-    command: sleep infinity
+    build: ./services/notification-service
+    ports:
+      - "8004:8004"
+    environment:
+      - PORT=8004
+
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=TaskBridge
+      - DB_USER=${POSTGRES_DB_USER}
+      - DB_PASSWORD=${POSTGRES_DB_PASS}
+
+      - REDIS_URL=redis://redis:6379
+
+      - JWT_SECRET=${JWT_SECRET}
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
 volumes:
   payment-pgdata:
