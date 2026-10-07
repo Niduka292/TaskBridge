@@ -5,7 +5,6 @@ public enum TaskCategory {
     MOBILE_DEVELOPMENT,
     UI_UX_DESIGN,
     GRAPHIC_DESIGN,
-    DATA_ANALYSIS,
     CONTENT_WRITING,
     TUTORING,
     VIDEO_EDITING,
