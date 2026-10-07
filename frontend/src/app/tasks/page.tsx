@@ -1,24 +1,24 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { Suspense, useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { listTasks, type Task, type TaskCategory, type TaskStatus } from '@/lib/api'
+import { listTasks, type Task, TaskCategory, type TaskStatus } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 // ── Constants ────────────────────────────────
 const CATEGORIES: { value: TaskCategory | ''; label: string }[] = [
   { value: '', label: 'All categories' },
-  { value: 'WEB_DEVELOPMENT',    label: 'Web Development' },
-  { value: 'MOBILE_DEVELOPMENT', label: 'Mobile Development' },
-  { value: 'UI_UX_DESIGN',       label: 'UI / UX Design' },
-  { value: 'GRAPHIC_DESIGN',     label: 'Graphic Design' },
-  { value: 'DATA_ANALYSIS',      label: 'Data Analysis' },
-  { value: 'CONTENT_WRITING',    label: 'Content Writing' },
-  { value: 'TUTORING',           label: 'Tutoring' },
-  { value: 'OTHER',              label: 'Other' },
-]
+  { value: TaskCategory.WEB_DEVELOPMENT, label: 'Web Development' },
+  { value: TaskCategory.MOBILE_DEVELOPMENT, label: 'Mobile Development' },
+  { value: TaskCategory.UI_UX_DESIGN, label: 'UI / UX Design' },
+  { value: TaskCategory.GRAPHIC_DESIGN, label: 'Graphic Design' },
+  { value: TaskCategory.CONTENT_WRITING, label: 'Content Writing' },
+  { value: TaskCategory.TUTORING, label: 'Tutoring' },
+  { value: TaskCategory.VIDEO_EDITING, label: 'Video Editing' },
+  { value: TaskCategory.OTHER, label: 'Other' },
+];
 
 const SORT_OPTIONS = [
   { value: 'createdAt,desc',  label: 'Newest first' },
@@ -132,7 +132,7 @@ function TaskCard({ task }: { task: Task }) {
               {task.bidCount} bid{task.bidCount !== 1 ? 's' : ''}
             </span>
             <span className="text-sm font-bold text-white">
-              LKR {task.budgetLkr.toLocaleString()}
+              LKR {task.budgetLKR.toLocaleString()}
             </span>
           </div>
         </div>
@@ -198,7 +198,7 @@ function EmptyState({ hasFilters }: { hasFilters: boolean }) {
 }
 
 // ── Main page ────────────────────────────────
-export default function TasksPage() {
+function TasksContent() {
   const router       = useRouter()
   const searchParams = useSearchParams()
 
@@ -415,5 +415,19 @@ export default function TasksPage() {
 
       </div>
     </div>
+  )
+}
+
+export default function TasksPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
+          <p className="text-zinc-400">Loading tasks...</p>
+        </div>
+      }
+    >
+      <TasksContent />
+    </Suspense>
   )
 }

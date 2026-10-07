@@ -10,7 +10,7 @@ import {
   type NotificationType,
   type NotificationPage,
 } from '@/lib/api'
-import { getCurrentUserId, subscribeToNotifications } from '@/lib/supabase'
+// import { getCurrentUserId, subscribeToNotifications } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 
 // ── Message + icon mapping ────────────────────
@@ -187,24 +187,24 @@ export default function NotificationsPage() {
     init()
   }, [loadPage])
 
-  // Realtime: prepend new notifications as they arrive
-  useEffect(() => {
-    let channel: { unsubscribe: () => void } | null = null
+  // // Realtime: prepend new notifications as they arrive
+  // useEffect(() => {
+  //   let channel: { unsubscribe: () => void } | null = null
 
-    async function subscribe() {
-      const userId = await getCurrentUserId()
-      if (!userId) return
-      channel = subscribeToNotifications(userId, (payload) => {
-        const newNotif = payload.new as unknown as Notification
-        if (newNotif?.id) {
-          setNotifications(prev => [newNotif, ...prev])
-        }
-      })
-    }
-    subscribe()
+  //   async function subscribe() {
+  //     const userId = await getCurrentUserId()
+  //     if (!userId) return
+  //     channel = subscribeToNotifications(userId, (payload) => {
+  //       const newNotif = payload.new as unknown as Notification
+  //       if (newNotif?.id) {
+  //         setNotifications(prev => [newNotif, ...prev])
+  //       }
+  //     })
+  //   }
+  //   subscribe()
 
-    return () => { channel?.unsubscribe() }
-  }, [])
+  //   return () => { channel?.unsubscribe() }
+  // }, [])
 
   async function handleLoadMore() {
     if (page + 1 >= totalPages) return

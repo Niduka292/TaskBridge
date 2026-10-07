@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { getTask, type Task, ApiError } from '@/lib/api'
-import { subscribeToEscrow } from '@/lib/supabase'
+import { getEscrowByTask } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 
 type ViewState = 'waiting' | 'held' | 'cancelled' | 'failed' | 'error'
@@ -16,7 +16,7 @@ function Spinner() {
   )
 }
 
-export default function PaymentReturnPage() {
+function PaymentReturnContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -66,7 +66,7 @@ export default function PaymentReturnPage() {
         if (t.status !== 'OPEN') {
           goToWorkspace(taskId as string)
         }
-        // Otherwise stay in 'waiting' — the realtime subscription below will catch the flip.
+        // Otherwise stay in 'waiting' — the polling effect below will detect when the escrow becomes HELD.
       } catch (err) {
         if (cancelled) return
         if (err instanceof ApiError) {
@@ -82,19 +82,32 @@ export default function PaymentReturnPage() {
     return () => { cancelled = true }
   }, [taskId, status])
 
-  // Subscribe to escrow realtime updates while waiting.
   useEffect(() => {
-    if (!taskId || status !== 'success') return
+  if (!taskId || status !== 'success') return
 
-    const channel = subscribeToEscrow(taskId, (payload: Record<string, unknown>) => {
-      const newRow = payload.new as { status?: string } | undefined
-      if (newRow?.status === 'HELD') {
+  let cancelled = false
+
+  const checkEscrow = async () => {
+    try {
+      const escrow = await getEscrowByTask(taskId)
+
+      if (!cancelled && escrow.status === 'HELD') {
         goToWorkspace(taskId)
       }
-    })
+    } catch (error) {
+      console.error('Failed to check escrow status:', error)
+    }
+  }
 
-    return () => { channel.unsubscribe() }
-  }, [taskId, status])
+  checkEscrow()
+
+  const interval = setInterval(checkEscrow, 2000)
+
+  return () => {
+    cancelled = true
+    clearInterval(interval)
+  }
+}, [taskId, status])
 
   function goToWorkspace(id: string) {
     if (redirectedRef.current) return
@@ -197,6 +210,20 @@ export default function PaymentReturnPage() {
 
       </div>
     </div>
+  )
+}
+
+export default function PaymentReturnPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
+          <Spinner />
+        </div>
+      }
+    >
+      <PaymentReturnContent />
+    </Suspense>
   )
 }
 

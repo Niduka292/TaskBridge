@@ -520,6 +520,15 @@ export interface PaymentInitiateResponse {
   notifyUrl: string
 }
 
+// export interface EscrowTransaction {
+//   id: string
+//   taskId: string
+//   posterId: string
+//   freelancerId: string
+//   amountLkr: number
+//   status: string
+// }
+
 /**
  * Get the signed PayHere checkout parameters for a task.
  * The frontend uses these to redirect the user to PayHere's
@@ -670,7 +679,15 @@ export function markNotificationRead(notificationId: string) {
   })
 }
 
-// src/lib/api.ts
+export async function getEscrowByTask(
+  taskId: string
+): Promise<EscrowTransaction> {
+  const escrow = await apiFetch(
+    `/api/v1/payments/task/${taskId}`
+  )
+
+  return escrow as EscrowTransaction
+}
 
 export enum TaskCategory {
   WEB_DEVELOPMENT = 'WEB_DEVELOPMENT',

@@ -111,7 +111,7 @@ function TaskRow({
           )}
 
           <span className="text-sm font-medium text-white">
-            LKR {(task.budgetLkr ?? 0).toLocaleString()}
+            LKR {(task.budgetLKR ?? 0).toLocaleString()}
           </span>
 
           <StatusBadge status={task.status} />

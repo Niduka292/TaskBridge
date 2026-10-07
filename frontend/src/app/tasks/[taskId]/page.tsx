@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -314,7 +314,7 @@ function BidForm({
 }
 
 // ── Main page ─────────────────────────────────
-export default function TaskDetailPage() {
+function TasksContent() {
   const params = useParams()
   const router = useRouter()
   const taskId = params.taskId as string
@@ -574,7 +574,7 @@ export default function TaskDetailPage() {
               <div>
                 <p className="text-zinc-500 text-xs mb-1">Budget</p>
                 <p className="text-white text-2xl font-bold">
-                  LKR {(task.budgetLkr ?? 0).toLocaleString()}
+                  LKR {(task.budgetLKR ?? 0).toLocaleString()}
                 </p>
               </div>
               <div>
@@ -622,11 +622,11 @@ export default function TaskDetailPage() {
                     group-hover:text-white transition-colors">
                     {task.posterName ?? 'Unknown user'}
                   </p>
-                  {(task.poster?.avgRatingAsFreelancer ?? 0) > 0 && (
+                  {/* {(task.poster?.avgRatingAsFreelancer ?? 0) > 0 && (
                     <p className="text-xs text-zinc-500">
                       ★ {task.poster?.avgRatingAsFreelancer?.toFixed(1)}
                     </p>
-                  )}
+                  )} */}
                 </div>
               </Link>
             </div>
@@ -648,5 +648,19 @@ export default function TaskDetailPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function TasksPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
+          <p>Loading tasks...</p>
+        </div>
+      }
+    >
+      <TasksContent />
+    </Suspense>
   )
 }

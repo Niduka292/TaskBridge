@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label'
 import { TagInput } from '@/components/ui/TagInput'
 
 // ── Constants ─────────────────────────────────
-const CATEGORIES: { value: TaskCategory; label: string }[] = [
+const CATEGORIES: { value: TaskCategory | ''; label: string }[] = [
+  { value: '', label: 'All categories' },
   { value: TaskCategory.WEB_DEVELOPMENT, label: 'Web Development' },
   { value: TaskCategory.MOBILE_DEVELOPMENT, label: 'Mobile Development' },
   { value: TaskCategory.UI_UX_DESIGN, label: 'UI / UX Design' },
@@ -18,7 +19,7 @@ const CATEGORIES: { value: TaskCategory; label: string }[] = [
   { value: TaskCategory.TUTORING, label: 'Tutoring' },
   { value: TaskCategory.VIDEO_EDITING, label: 'Video Editing' },
   { value: TaskCategory.OTHER, label: 'Other' },
-]
+];
 
 // Skill suggestions now live as the default inside @/components/ui/TagInput
 
@@ -179,7 +180,7 @@ export default function PostTaskPage() {
         description: form.description.trim(),
         category: form.category as TaskCategory,
         skillTags: form.skillTags,
-        budgetLkr: Number(form.budgetLkr),
+        budgetLKR: Number(form.budgetLkr),
         deadline: new Date(form.deadline).toISOString(),
       })
       router.push(`/tasks/${task.id}`)

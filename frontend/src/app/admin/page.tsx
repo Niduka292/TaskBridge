@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { listTasks, resolveDispute, type Task } from '@/lib/api'
-import { isAdmin } from '@/lib/supabase'
+// import { isAdmin } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 
 function Skeleton() {
@@ -179,18 +179,18 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    async function checkAuth() {
-      const admin = await isAdmin()
-      if (!admin) {
-        router.replace('/profile/dashboard')
-        return
-      }
-      setAuthorized(true)
-      setAuthChecked(true)
-    }
-    checkAuth()
-  }, [router])
+  // useEffect(() => {
+  //   async function checkAuth() {
+  //     const admin = await isAdmin()
+  //     if (!admin) {
+  //       router.replace('/profile/dashboard')
+  //       return
+  //     }
+  //     setAuthorized(true)
+  //     setAuthChecked(true)
+  //   }
+  //   checkAuth()
+  // }, [router])
 
   useEffect(() => {
     if (!authChecked || !authorized) return
