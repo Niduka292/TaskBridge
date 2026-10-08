@@ -4,10 +4,10 @@ env:
   shell: bash
   variables:
     # Confirm these four repository names before the first build.
-    USER_REPOSITORY: taskbridge-user-service
-    TASK_REPOSITORY: taskbridge-task-service
-    PAYMENT_REPOSITORY: taskbridge-payment-service
-    GATEWAY_REPOSITORY: taskbridge-gateway
+    USER_REPOSITORY: taskbridge/user-service
+    TASK_REPOSITORY: taskbridge/task-service
+    PAYMENT_REPOSITORY: taskbridge/payment-service
+    GATEWAY_REPOSITORY: taskbridge/gateway
 
 phases:
   install:
