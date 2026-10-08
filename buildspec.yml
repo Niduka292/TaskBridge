@@ -1,0 +1,109 @@
+version: 0.2
+
+env:
+  shell: bash
+  variables:
+    # Confirm these four repository names before the first build.
+    USER_REPOSITORY: taskbridge-user-service
+    TASK_REPOSITORY: taskbridge-task-service
+    PAYMENT_REPOSITORY: taskbridge-payment-service
+    GATEWAY_REPOSITORY: taskbridge-gateway
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto21
+  build:
+    on-failure: ABORT
+    commands:
+      # One shell block keeps error handling, arrays and publication gates together.
+      - |
+        set -Eeuo pipefail
+        trap 'rc=$?; printf "Build failed at line %s (exit %s)\n" "$LINENO" "$rc" >&2; exit "$rc"' ERR
+        export AWS_PAGER=""
+        readonly REGION="ap-southeast-2"
+        readonly ACCOUNT="916981870047"
+        readonly REGISTRY="${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com"
+        cd "${CODEBUILD_SRC_DIR:?CodeBuild source directory is required}"
+
+        fail() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
+        [[ "${CODEBUILD_BUILD_SUCCEEDING:-0}" == "1" ]] || fail "An earlier phase failed."
+        [[ "$(aws sts get-caller-identity --query Account --output text)" == "$ACCOUNT" ]] || fail "Wrong AWS account."
+        java -version
+        java_version="$(java -XshowSettings:properties -version 2>&1)"
+        [[ "$java_version" =~ java.specification.version[[:space:]]*=[[:space:]]*21([[:space:]]|$) ]] || fail "Java 21 is required."
+        docker info >/dev/null
+
+        # Prefer the resolved revision; never tag with a branch, PR number or timestamp.
+        revision="${CODEBUILD_RESOLVED_SOURCE_VERSION:-}"
+        if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+          git_revision="$(git rev-parse --verify HEAD^{commit})"
+          if [[ -n "$revision" && "${revision,,}" != "${git_revision,,}" ]]; then
+            fail "Resolved revision differs from checked-out HEAD."
+          fi
+          revision="$git_revision"
+        fi
+        [[ "$revision" =~ ^[[:xdigit:]]{40}$ || "$revision" =~ ^[[:xdigit:]]{64}$ ]] || fail "A full Git commit SHA is required."
+        readonly IMAGE_TAG="${revision,,}"
+        printf 'Building commit %s\n' "$IMAGE_TAG"
+
+        contexts=(services/user-service services/task-service services/payment-service gateway)
+        repositories=("$USER_REPOSITORY" "$TASK_REPOSITORY" "$PAYMENT_REPOSITORY" "$GATEWAY_REPOSITORY")
+        declare -A seen=()
+        for i in "${!contexts[@]}"; do
+          context="${contexts[$i]}"
+          repository="${repositories[$i]}"
+          [[ -n "$repository" && -z "${seen[$repository]:-}" ]] || fail "Four distinct repository names are required."
+          seen["$repository"]=1
+          [[ -f "$context/Dockerfile" ]] || fail "Missing $context/Dockerfile"
+          mutability="$(aws ecr describe-repositories --region "$REGION" --registry-id "$ACCOUNT" --repository-names "$repository" --query 'repositories[0].imageTagMutability' --output text)"
+          [[ "$mutability" == "IMMUTABLE" ]] || fail "$repository must use IMMUTABLE with no exclusions."
+          existing="$(aws ecr list-images --region "$REGION" --registry-id "$ACCOUNT" --repository-name "$repository" --filter tagStatus=TAGGED --query "imageIds[?imageTag=='${IMAGE_TAG}'].imageTag" --output text)"
+          [[ -z "$existing" ]] || fail "Commit tag already exists in $repository; see BUILD_GUIDE.md."
+        done
+
+        # Clean builds, tests and packaging run sequentially to bound memory usage.
+        # verify includes Surefire tests and any Failsafe tests bound by each POM.
+        for context in "${contexts[@]:0:3}"; do
+          [[ -f "$context/pom.xml" && -f "$context/mvnw" ]] || fail "Missing Maven project/wrapper in $context"
+          (
+            cd "$context"
+            bash ./mvnw --batch-mode --no-transfer-progress -Dstyle.color=never -Dmaven.test.skip=false -DskipTests=false -DskipITs=false clean verify
+            shopt -s nullglob
+            jars=(target/*.jar)
+            ((${#jars[@]} > 0)) || fail "No JAR produced in $context/target"
+            boot_jar=false
+            for jar_file in "${jars[@]}"; do
+              jar tf "$jar_file" > target/codebuild-jar-entries.txt
+              if grep -q '^BOOT-INF/classes/' target/codebuild-jar-entries.txt; then boot_jar=true; fi
+            done
+            [[ "$boot_jar" == true ]] || fail "No executable Spring Boot JAR found in $context"
+          )
+        done
+
+        # Build every image successfully before publishing the first one.
+        for i in "${!contexts[@]}"; do
+          docker build --pull --label "org.opencontainers.image.revision=$IMAGE_TAG" --tag "$REGISTRY/${repositories[$i]}:$IMAGE_TAG" "${contexts[$i]}"
+        done
+
+        # Service-role credentials only; keep the temporary Docker token outside source.
+        export DOCKER_CONFIG
+        DOCKER_CONFIG="$(mktemp -d)"
+        cleanup() { rm -rf -- "$DOCKER_CONFIG"; }
+        trap cleanup EXIT
+        aws ecr get-login-password --region "$REGION" | docker login --username AWS --password-stdin "$REGISTRY"
+        for repository in "${repositories[@]}"; do
+          image="$REGISTRY/$repository:$IMAGE_TAG"
+          docker push "$image"
+          digest="$(aws ecr describe-images --region "$REGION" --registry-id "$ACCOUNT" --repository-name "$repository" --image-ids "imageTag=$IMAGE_TAG" --query 'imageDetails[0].imageDigest' --output text)"
+          [[ "$digest" =~ ^sha256:[[:xdigit:]]{64}$ ]] || fail "Missing published digest for $image"
+          printf 'Published %s (digest %s)\n' "$image" "$digest"
+        done
+        printf 'All four images published for commit %s. No deployment performed.\n' "$IMAGE_TAG"
+
+reports:
+  taskbridge-tests:
+    files:
+      - services/*/target/surefire-reports/TEST-*.xml
+      - services/*/target/failsafe-reports/TEST-*.xml
+    file-format: JUNITXML
