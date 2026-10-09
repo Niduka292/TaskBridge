@@ -51,21 +51,21 @@ function resolveTarget(n: Notification): string {
     case 'BID_RECEIVED':
     case 'BID_ACCEPTED':
     case 'ESCROW_HELD':
-      return taskId ? `/tasks/${taskId}` : '/dashboard'
+      return taskId ? `/tasks/${taskId}` : '/profile/dashboard'
     case 'WORK_SUBMITTED':
     case 'DISPUTE_RAISED':
-      return taskId ? `/tasks/${taskId}/workspace` : '/dashboard'
+      return taskId ? `/tasks/${taskId}/workspace` : '/profile/dashboard'
     case 'ESCROW_RELEASED':
     case 'ESCROW_REFUNDED':
-      return taskId ? `/tasks/${taskId}` : '/dashboard'
+      return taskId ? `/tasks/${taskId}` : '/profile/dashboard'
     case 'TASK_COMPLETED':
-      return taskId ? `/tasks/${taskId}/workspace` : '/dashboard'
+      return taskId ? `/tasks/${taskId}/workspace` : '/profile/dashboard'
     case 'REVIEW_POSTED':
       return '/dashboard'
     case 'DEADLINE_APPROACHING':
-      return taskId ? `/tasks/${taskId}` : '/dashboard'
+      return taskId ? `/tasks/${taskId}` : '/profile/dashboard'
     default:
-      return '/dashboard'
+      return '/profile/dashboard'
   }
 }
 

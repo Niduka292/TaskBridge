@@ -132,7 +132,7 @@ function TaskCard({ task }: { task: Task }) {
               {task.bidCount} bid{task.bidCount !== 1 ? 's' : ''}
             </span>
             <span className="text-sm font-bold text-white">
-              LKR {task.budgetLKR.toLocaleString()}
+              LKR {task.budgetLkr.toLocaleString()}
             </span>
           </div>
         </div>

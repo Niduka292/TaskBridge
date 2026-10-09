@@ -574,7 +574,7 @@ function TasksContent() {
               <div>
                 <p className="text-zinc-500 text-xs mb-1">Budget</p>
                 <p className="text-white text-2xl font-bold">
-                  LKR {(task.budgetLKR ?? 0).toLocaleString()}
+                  LKR {(task.budgetLkr ?? 0).toLocaleString()}
                 </p>
               </div>
               <div>

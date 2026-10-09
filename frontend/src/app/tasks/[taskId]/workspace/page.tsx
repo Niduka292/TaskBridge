@@ -404,7 +404,7 @@ export default function WorkspacePage() {
         <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
           <div>
             <div className="flex items-center gap-2 text-xs text-zinc-500 mb-2">
-              <Link href="/dashboard"
+              <Link href="/profile/dashboard"
                 className="hover:text-zinc-300 transition-colors">
                 Dashboard
               </Link>

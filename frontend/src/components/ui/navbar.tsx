@@ -47,7 +47,7 @@ export default function Navbar() {
       >
 
         {/* Brand */}
-        <Link href={loggedIn ? '/dashboard' : '/'} className="flex items-center gap-2">
+        <Link href={loggedIn ? '/profile/dashboard' : '/'} className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center">
             <span className="text-white font-bold text-xs">T</span>
           </div>

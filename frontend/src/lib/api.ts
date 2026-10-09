@@ -156,7 +156,7 @@ export interface Task {
   assignedTo: string | null
   title: string
   description: string
-  budgetLKR: number
+  budgetLkr: number
   status: TaskStatus
   deadline: string
   category: TaskCategory
@@ -380,7 +380,7 @@ export function updateTask(
   data: Partial<{
     title: string
     description: string
-    budgetLKR: number
+    budgetLkr: number
     deadline: string
     category: TaskCategory
     skillTags: string[]
