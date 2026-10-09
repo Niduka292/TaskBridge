@@ -22,3 +22,6 @@ services/*/node_modules/
 *.tgz
 
 /docs
+
+services/user-service/.LCK*~
+services/payment-service/.LCK*~
