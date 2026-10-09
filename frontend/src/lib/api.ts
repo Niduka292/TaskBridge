@@ -361,7 +361,7 @@ export function getTask(taskId: string) {
 export function createTask(data: {
   title: string
   description: string
-  budgetLKR: number
+  budgetLkr: number
   deadline: string
   category: TaskCategory
   skillTags: string[]

@@ -180,7 +180,7 @@ export default function PostTaskPage() {
         description: form.description.trim(),
         category: form.category as TaskCategory,
         skillTags: form.skillTags,
-        budgetLKR: Number(form.budgetLkr),
+        budgetLkr: Number(form.budgetLkr),
         deadline: new Date(form.deadline).toISOString(),
       })
       router.push(`/tasks/${task.id}`)
