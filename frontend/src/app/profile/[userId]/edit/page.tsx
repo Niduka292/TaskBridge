@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { getProfile, updateProfile, type Profile, ApiError } from '@/lib/api'
-import { getCurrentUserId, uploadAvatar } from '@/lib/supabase'
+import { getCurrentUserId } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -35,7 +35,6 @@ export default function EditProfilePage() {
   const params = useParams()
   const router = useRouter()
   const userId = params.userId as string
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [authChecked, setAuthChecked] = useState(false)
   const [authorized, setAuthorized] = useState(false)
@@ -47,12 +46,9 @@ export default function EditProfilePage() {
   const [bio, setBio] = useState('')
   const [skills, setSkills] = useState<string[]>([])
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
 
   const [errors, setErrors] = useState<FieldErrors>({})
   const [saving, setSaving] = useState(false)
-  const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [globalError, setGlobalError] = useState<string | null>(null)
 
   // ── Gate: only the profile owner may edit ──
@@ -89,13 +85,6 @@ export default function EditProfilePage() {
     load()
   }, [authChecked, authorized, userId])
 
-  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setAvatarFile(file)
-    setAvatarPreview(URL.createObjectURL(file))
-  }
-
   function validate(): boolean {
     const e: FieldErrors = {}
     if (!fullName.trim() || fullName.trim().length < 2) {
@@ -114,25 +103,11 @@ export default function EditProfilePage() {
 
     setSaving(true)
     try {
-      let finalAvatarUrl = avatarUrl
-
-      if (avatarFile) {
-        setUploadingAvatar(true)
-        const uploaded = await uploadAvatar(userId, avatarFile)
-        setUploadingAvatar(false)
-        if (!uploaded) {
-          setGlobalError('Avatar upload failed. Your other changes were not saved — please try again.')
-          setSaving(false)
-          return
-        }
-        finalAvatarUrl = uploaded
-      }
-
       await updateProfile(userId, {
         fullName: fullName.trim(),
         bio: bio.trim() || null,
         skills,
-        avatarUrl: finalAvatarUrl,
+        avatarUrl,
       })
 
       router.push(`/profile/${userId}`)
@@ -162,7 +137,7 @@ export default function EditProfilePage() {
     )
   }
 
-  const displayAvatar = avatarPreview ?? avatarUrl
+  const displayAvatar = avatarUrl
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
@@ -171,7 +146,7 @@ export default function EditProfilePage() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold tracking-tight mb-1">Edit profile</h1>
           <p className="text-zinc-500 text-sm">
-            Update your name, bio, skills, and avatar.
+            Update your name, bio, and skills.
           </p>
         </div>
 
@@ -190,30 +165,8 @@ export default function EditProfilePage() {
                   </span>
                 )}
               </div>
-              {uploadingAvatar && (
-                <div className="absolute inset-0 rounded-full bg-black/50
-                  flex items-center justify-center">
-                  <div className="w-5 h-5 border-2 border-zinc-300 border-t-transparent
-                    rounded-full animate-spin" />
-                </div>
-              )}
             </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleAvatarChange}
-              className="hidden"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={saving}
-            >
-              Change photo
-            </Button>
+<p className="text-zinc-500 text-xs">Photo uploads are temporarily unavailable.</p>
           </div>
 
           {/* Full name */}

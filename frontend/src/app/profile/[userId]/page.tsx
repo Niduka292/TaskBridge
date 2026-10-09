@@ -10,7 +10,7 @@ import {
   type Review,
   type Page,
 } from '@/lib/api'
-import { getCurrentUserId, uploadAvatar } from '@/lib/supabase'
+import { getCurrentUserId } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 
 // ── Star rating display ──────────────────────
@@ -118,7 +118,6 @@ export default function ProfilePage() {
   const [reviewTab, setReviewTab] = useState<'AS_FREELANCER' | 'AS_POSTER'>('AS_FREELANCER')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [uploading, setUploading] = useState(false)
 
   const isOwn = currentUserId === userId
 
@@ -148,19 +147,6 @@ export default function ProfilePage() {
       .then(setReviews)
       .catch(() => { })
   }, [userId, reviewTab])
-
-  // Avatar upload
-  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file || !isOwn) return
-    setUploading(true)
-    try {
-      const url = await uploadAvatar(userId, file)
-      if (url && profile) setProfile({ ...profile, avatarUrl: url })
-    } finally {
-      setUploading(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -209,30 +195,6 @@ export default function ProfilePage() {
                   border-violet-500/30 flex items-center justify-center">
                   <span className="text-violet-300 font-bold text-xl">{initials}</span>
                 </div>
-              )}
-              {/* Upload button — own profile only */}
-              {isOwn && (
-                <label className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full
-                  bg-zinc-800 border border-zinc-600 flex items-center justify-center
-                  cursor-pointer hover:bg-zinc-700 transition-colors">
-                  {uploading ? (
-                    <span className="w-3 h-3 border border-zinc-400 border-t-white
-                      rounded-full animate-spin" />
-                  ) : (
-                    <svg className="w-3.5 h-3.5 text-zinc-300" fill="none"
-                      viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0
-                          0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                    </svg>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleAvatarChange}
-                  />
-                </label>
               )}
             </div>
 
